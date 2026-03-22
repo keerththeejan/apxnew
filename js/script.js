@@ -122,6 +122,14 @@
         closeMenu();
       }
     });
+
+    links.addEventListener('click', function(e){
+      var a = e.target.closest('a[data-nav]');
+      if (!a || window.innerWidth > 991) return;
+      if (a.classList.contains('dropdown-toggle')) return;
+      if (a.getAttribute('href') === '#' || a.getAttribute('href') === '') return;
+      closeMenu();
+    });
   }
 
   function initReveal(){

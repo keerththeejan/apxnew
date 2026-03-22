@@ -29,6 +29,8 @@
       { key:'dashboard', label:'Dashboard', icon:'bi-speedometer2', href: adminUrl('/admin') },
       { key:'site', label:'Public homepage', linkTitle:'View site (public homepage). Opens in a new tab.', icon:'bi-house-door', href: adminUrl('/'), external: true },
       { key:'pages', label:'Manage Pages', icon:'bi-layout-text-window-reverse', href: adminUrl('/admin/pages') },
+      { key:'banners', label:'Home banners', icon:'bi-image', href: adminUrl('/admin/banners') },
+      { key:'footer_gallery', label:'Footer gallery', icon:'bi-grid-3x3-gap', href: adminUrl('/admin/footer-gallery') },
       { key:'navigation', label:'Menu management', icon:'bi-list-nested', href: adminUrl('/admin/navigation') },
       { key:'services', label:'Services', icon:'bi-grid-1x2', href: adminUrl('/admin/services') },
       { key:'flights', label:'Flight Tickets', icon:'bi-airplane', href: adminUrl('/admin/flights') },

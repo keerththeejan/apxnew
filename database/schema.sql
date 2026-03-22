@@ -214,11 +214,14 @@ CREATE TABLE IF NOT EXISTS settings (
   PRIMARY KEY (id),
   UNIQUE KEY uq_settings_key (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Key/value examples: site_name, theme_enabled, theme_switcher_enabled, theme_mode (light|dark|auto),
+-- clock_enabled, clock_time_format (12|24), app_timezone, theme_primary, default_theme (legacy sync).
 
 -- Spec-required dynamic CMS tables
 CREATE TABLE IF NOT EXISTS services (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   icon VARCHAR(60) NULL,
+  image_path VARCHAR(500) NULL,
   title VARCHAR(160) NOT NULL,
   description VARCHAR(255) NULL,
   link VARCHAR(255) NULL,
@@ -392,4 +395,23 @@ CREATE TABLE IF NOT EXISTS nav_items (
   KEY idx_nav_active (is_active),
   KEY idx_nav_parent (parent_id),
   CONSTRAINT fk_nav_parent FOREIGN KEY (parent_id) REFERENCES nav_items(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS home_banners (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title VARCHAR(220) NOT NULL DEFAULT '',
+  subtitle VARCHAR(500) NULL,
+  image_path VARCHAR(500) NULL,
+  show_image TINYINT(1) NOT NULL DEFAULT 1,
+  button1_text VARCHAR(120) NOT NULL DEFAULT '',
+  button1_link VARCHAR(500) NOT NULL DEFAULT '',
+  button2_text VARCHAR(120) NOT NULL DEFAULT '',
+  button2_link VARCHAR(500) NOT NULL DEFAULT '',
+  order_index INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_home_banners_order (order_index),
+  KEY idx_home_banners_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

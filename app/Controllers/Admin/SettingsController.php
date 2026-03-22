@@ -54,6 +54,39 @@ final class SettingsController extends AdminBaseController
             return;
         }
 
+        $tzRaw = trim((string) Request::post('app_timezone', ''));
+        if ($tzRaw !== '') {
+            try {
+                new \DateTimeZone($tzRaw);
+            } catch (\Throwable) {
+                $this->respondSave(false, 'Invalid timezone. Use a valid IANA name (e.g. Asia/Colombo, UTC).');
+                return;
+            }
+        }
+
+        $themeMode = strtolower(trim((string) Request::post('theme_mode', 'light')));
+        if (!in_array($themeMode, ['light', 'dark', 'auto'], true)) {
+            $themeMode = 'light';
+        }
+
+        $clockFmt = strtolower(trim((string) Request::post('clock_time_format', '24')));
+        if ($clockFmt !== '12') {
+            $clockFmt = '24';
+        }
+
+        Setting::set('theme_enabled', Request::post('theme_enabled') === '1' ? '1' : '0');
+        Setting::set('theme_switcher_enabled', Request::post('theme_switcher_enabled') === '1' ? '1' : '0');
+        Setting::set('theme_mode', $themeMode);
+        Setting::set('clock_enabled', Request::post('clock_enabled') === '1' ? '1' : '0');
+        Setting::set('clock_time_format', $clockFmt);
+
+        // Keep legacy default_theme in sync for any code still reading it.
+        if ($themeMode === 'dark') {
+            Setting::set('default_theme', 'dark');
+        } else {
+            Setting::set('default_theme', 'light');
+        }
+
         $stringKeys = [
             'site_name',
             'site_logo_path',
@@ -66,7 +99,6 @@ final class SettingsController extends AdminBaseController
             'theme_accent',
             'theme_gradient_from',
             'theme_gradient_to',
-            'default_theme',
             'default_locale',
             'app_timezone',
             'currency_format',

@@ -6,9 +6,12 @@ $title = $title ?? 'APX';
 $settings = $settings ?? [];
 $defaultLocale = $defaultLocale ?? 'en';
 $defaultTheme = $defaultTheme ?? 'light';
+$themeClientConfig = $themeClientConfig ?? [];
 $themeCssVars = $themeCssVars ?? '';
 $metaDescription = $metaDescription ?? '';
 $bodyClass = trim((string) ($bodyClass ?? ''));
+$tm = isset($themeClientConfig['themeMode']) ? (string) $themeClientConfig['themeMode'] : 'light';
+$bodyClass = trim($bodyClass . ' theme-' . ($defaultTheme === 'dark' ? 'dark' : 'light'));
 
 $flashErrors = $_SESSION['flash_errors'] ?? [];
 $flashOld = $_SESSION['flash_old'] ?? [];
@@ -17,7 +20,7 @@ $flashError = $_SESSION['flash_error'] ?? null;
 
 unset($_SESSION['flash_errors'], $_SESSION['flash_old'], $_SESSION['flash_success'], $_SESSION['flash_error']);
 ?><!doctype html>
-<html lang="<?= e((string) $defaultLocale) ?>" data-bs-theme="<?= e((string) $defaultTheme) ?>" data-default-theme="<?= e((string) $defaultTheme) ?>">
+<html lang="<?= e((string) $defaultLocale) ?>" class="apx-root" data-bs-theme="<?= e((string) $defaultTheme) ?>" data-theme="<?= e((string) $defaultTheme) ?>" data-theme-mode="<?= e($tm) ?>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,6 +32,7 @@ unset($_SESSION['flash_errors'], $_SESSION['flash_old'], $_SESSION['flash_succes
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <style><?= $themeCssVars !== '' ? $themeCssVars : '' ?></style>
   <link rel="stylesheet" href="<?= e(base_url('/css/style.css')) ?>?v=<?= time() ?>" />
+  <script type="application/json" id="apx-public-config"><?= e(json_encode($themeClientConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></script>
 </head>
 <body class="tms-body<?= $bodyClass !== '' ? ' ' . e($bodyClass) : '' ?>">
   <?php require __DIR__ . '/../partials/header.php'; ?>
@@ -47,6 +51,7 @@ unset($_SESSION['flash_errors'], $_SESSION['flash_old'], $_SESSION['flash_succes
   <?php require __DIR__ . '/../partials/footer.php'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="<?= e(base_url('/js/theme-clock.js')) ?>?v=<?= time() ?>"></script>
   <script src="<?= e(base_url('/js/script.js')) ?>?v=<?= time() ?>"></script>
   <script>
     (function(){
@@ -60,24 +65,6 @@ unset($_SESSION['flash_errors'], $_SESSION['flash_old'], $_SESSION['flash_succes
           form.classList.add('was-validated');
         }, false);
       });
-      var root = document.documentElement;
-      var key = 'tms_theme';
-      var saved = null;
-      try { saved = localStorage.getItem(key); } catch (e) {}
-      var dbDef = root.getAttribute('data-default-theme') || 'light';
-      if (saved === 'dark' || saved === 'light') {
-        root.setAttribute('data-bs-theme', saved);
-      } else {
-        root.setAttribute('data-bs-theme', dbDef === 'dark' ? 'dark' : 'light');
-      }
-      var btn = document.getElementById('themeToggle');
-      if (btn) {
-        btn.addEventListener('click', function(){
-          var next = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-          root.setAttribute('data-bs-theme', next);
-          try { localStorage.setItem(key, next); } catch (e) {}
-        });
-      }
     })();
   </script>
 </body>

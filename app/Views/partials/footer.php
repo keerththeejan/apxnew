@@ -51,11 +51,26 @@ $footerGallery = $footerGallery ?? [];
         <h4>Gallery</h4>
         <div class="footer-gallery" aria-label="Gallery">
           <?php foreach ($footerGallery as $g): ?>
-            <?php $gp = (string) ($g['image_path'] ?? ''); if ($gp === '') { continue; } ?>
-          <a class="footer-thumb js-lightbox" href="<?= e(base_url(ltrim($gp, '/'))) ?>" aria-label="<?= e((string) ($g['alt_text'] ?? 'Gallery')) ?>">
-            <img src="<?= e(base_url(ltrim($gp, '/'))) ?>" alt="<?= e((string) ($g['alt_text'] ?? '')) ?>" loading="lazy" decoding="async" />
-          </a>
+            <?php
+              $gp = (string) ($g['image_path'] ?? '');
+              if ($gp === '') {
+                  continue;
+              }
+              $gAlt = trim((string) ($g['alt_text'] ?? ''));
+              $gLabel = $gAlt !== '' ? $gAlt : 'Gallery image';
+            ?>
+          <div class="footer-thumb-wrap">
+            <a class="footer-thumb js-lightbox" href="<?= e(base_url(ltrim($gp, '/'))) ?>" aria-label="<?= e($gLabel) ?>">
+              <img src="<?= e(base_url(ltrim($gp, '/'))) ?>" alt="<?= e($gAlt) ?>" loading="lazy" decoding="async" />
+            </a>
+            <?php if ($gAlt !== ''): ?>
+              <span class="footer-thumb-caption"><?= e($gAlt) ?></span>
+            <?php endif; ?>
+          </div>
           <?php endforeach; ?>
+          <?php if ($footerGallery === []): ?>
+            <p class="small text-white-50 mb-0">Gallery images are managed in Admin → Footer gallery.</p>
+          <?php endif; ?>
         </div>
 
         </div>

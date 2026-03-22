@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Models\FooterGallery;
 use App\Models\FooterLink;
-use App\Models\HeroSection;
+use App\Models\HomeBanner;
 use App\Models\NavItem;
 
 final class PublicLayout
@@ -31,13 +31,14 @@ final class PublicLayout
             'settings' => $settings,
             'socialLinks' => SiteConfig::socialLinks(),
             'defaultLocale' => SiteConfig::get('default_locale', 'en'),
-            'defaultTheme' => SiteConfig::get('default_theme', 'light'),
+            'defaultTheme' => SiteConfig::effectiveBootstrapThemeForHtml(),
+            'themeClientConfig' => SiteConfig::publicThemeClientConfig(),
             'themeCssVars' => SiteConfig::themeCssVars(),
             'navMenu' => NavItem::publicMenu(),
             'navCurrentKey' => NavItem::currentRequestNavKey(),
             'footerLinksByGroup' => FooterLink::groupedActive(),
             'footerGallery' => FooterGallery::activeOrdered(),
-            'heroHome' => HeroSection::findByPageKey('home'),
+            'homeBanners' => HomeBanner::activeOrdered(),
         ];
     }
 }

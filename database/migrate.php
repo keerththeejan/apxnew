@@ -11,7 +11,16 @@ $cmd = strtolower((string) $cmd);
 
 $pdo = Db::pdo();
 
-$pdo->exec('CREATE TABLE IF NOT EXISTS migrations (\n  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n  name VARCHAR(190) NOT NULL,\n  batch INT NOT NULL,\n  applied_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (id),\n  UNIQUE KEY uq_migrations_name (name)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS migrations (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(190) NOT NULL,
+  batch INT NOT NULL,
+  applied_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_migrations_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+);
 
 function readApplied(PDO $pdo): array
 {

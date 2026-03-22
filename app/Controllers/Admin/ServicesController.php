@@ -37,6 +37,7 @@ final class ServicesController extends AdminBaseController
             'pageCount' => $result['pageCount'],
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
+            'servicesImageColumn' => Service::hasImagePathColumn(),
         ]);
     }
 
@@ -63,7 +64,29 @@ final class ServicesController extends AdminBaseController
             return;
         }
 
-        $id = Service::create($data);
+        $data['image_path'] = '';
+        if (Service::hasImagePathColumn()) {
+            $upload = $this->handleServiceImageUpload();
+            if ($upload === false) {
+                $_SESSION['flash_error'] = 'Image upload failed (invalid type or size; max 3 MB).';
+                $this->redirect('/admin/services');
+
+                return;
+            }
+            $data['image_path'] = $upload ?? '';
+        }
+
+        try {
+            $id = Service::create($data);
+        } catch (\Throwable) {
+            if (($data['image_path'] ?? '') !== '') {
+                $this->deleteManagedServiceFile((string) $data['image_path']);
+            }
+            $_SESSION['flash_error'] = 'Could not save. Check the database connection and services table.';
+            $this->redirect('/admin/services');
+
+            return;
+        }
         try {
             ActivityLog::record(isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null, 'service.create', 'service', $id, null);
         } catch (\Throwable $e) {
@@ -102,7 +125,50 @@ final class ServicesController extends AdminBaseController
             return;
         }
 
-        Service::update($id, $data);
+        $existing = Service::findById($id);
+        if ($existing === null) {
+            $_SESSION['flash_error'] = 'Service not found.';
+            $this->redirect('/admin/services');
+
+            return;
+        }
+
+        if (Service::hasImagePathColumn()) {
+            $upload = $this->handleServiceImageUpload();
+            if ($upload === false) {
+                $_SESSION['flash_error'] = 'Image upload failed (invalid type or size; max 3 MB).';
+                $this->redirect('/admin/services');
+
+                return;
+            }
+
+            $currentPath = (string) ($existing['image_path'] ?? '');
+            $newPath = $currentPath;
+            if (Request::post('clear_image') === '1') {
+                $this->deleteManagedServiceFile($currentPath);
+                $newPath = '';
+            } elseif ($upload !== null) {
+                $this->deleteManagedServiceFile($currentPath);
+                $newPath = $upload;
+            }
+            $data['image_path'] = $newPath;
+        }
+
+        try {
+            Service::update($id, $data);
+        } catch (\Throwable) {
+            if (Service::hasImagePathColumn()) {
+                $np = (string) ($data['image_path'] ?? '');
+                $cp = (string) ($existing['image_path'] ?? '');
+                if ($np !== '' && $np !== $cp) {
+                    $this->deleteManagedServiceFile($np);
+                }
+            }
+            $_SESSION['flash_error'] = 'Could not update. Check the database connection and services table.';
+            $this->redirect('/admin/services');
+
+            return;
+        }
         try {
             ActivityLog::record(isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null, 'service.update', 'service', $id, null);
         } catch (\Throwable $e) {
@@ -127,6 +193,10 @@ final class ServicesController extends AdminBaseController
             return;
         }
 
+        $row = Service::findById($id);
+        if ($row !== null) {
+            $this->deleteManagedServiceFile((string) ($row['image_path'] ?? ''));
+        }
         Service::delete($id);
         try {
             ActivityLog::record(isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null, 'service.delete', 'service', $id, null);
@@ -134,5 +204,69 @@ final class ServicesController extends AdminBaseController
         }
         $_SESSION['flash_success'] = 'Service deleted.';
         $this->redirect('/admin/services');
+    }
+
+    /**
+     * @return null|string|false null = no file uploaded; string = web path; false = invalid upload
+     */
+    private function handleServiceImageUpload()
+    {
+        if (!isset($_FILES['service_image']) || !is_array($_FILES['service_image'])) {
+            return null;
+        }
+        $f = $_FILES['service_image'];
+        if (($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+        if (($f['error'] ?? 0) !== UPLOAD_ERR_OK || !isset($f['tmp_name']) || !is_uploaded_file($f['tmp_name'])) {
+            return false;
+        }
+        if (($f['size'] ?? 0) > 3_145_728) {
+            return false;
+        }
+
+        $mime = 'application/octet-stream';
+        if (function_exists('finfo_open')) {
+            $fi = finfo_open(FILEINFO_MIME_TYPE);
+            if ($fi !== false) {
+                $mime = (string) finfo_file($fi, $f['tmp_name']);
+                finfo_close($fi);
+            }
+        }
+
+        $map = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+        ];
+        if (!isset($map[$mime])) {
+            return false;
+        }
+
+        $dir = dirname(__DIR__, 3) . '/public/uploads/services';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+
+        $name = 'svc-' . gmdate('YmdHis') . '-' . bin2hex(random_bytes(4)) . '.' . $map[$mime];
+        $dest = $dir . DIRECTORY_SEPARATOR . $name;
+        if (!@move_uploaded_file($f['tmp_name'], $dest)) {
+            return false;
+        }
+
+        return '/uploads/services/' . $name;
+    }
+
+    private function deleteManagedServiceFile(string $webPath): void
+    {
+        $webPath = trim($webPath);
+        if ($webPath === '' || !str_starts_with($webPath, '/uploads/services/')) {
+            return;
+        }
+        $full = dirname(__DIR__, 3) . '/public' . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+        if (is_file($full)) {
+            @unlink($full);
+        }
     }
 }

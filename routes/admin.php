@@ -9,6 +9,8 @@ use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\EnquiriesController;
 use App\Controllers\Admin\FinanceServicesController;
 use App\Controllers\Admin\FlightsController;
+use App\Controllers\Admin\FooterGalleryController;
+use App\Controllers\Admin\HomeBannersController;
 use App\Controllers\Admin\HotelsController;
 use App\Controllers\Admin\InsurancePackagesController;
 use App\Controllers\Admin\NavigationController;
@@ -38,6 +40,18 @@ $router->post('/admin/navigation/update', [NavigationController::class, 'update'
 $router->post('/admin/navigation/delete', [NavigationController::class, 'destroy']);
 $router->post('/admin/navigation/reorder', [NavigationController::class, 'reorder']);
 $router->post('/admin/navigation/reorder-ajax', [NavigationController::class, 'reorderAjax']);
+
+$router->get('/admin/banners.html', [HomeBannersController::class, 'htmlAlias']);
+$router->get('/admin/banners', [HomeBannersController::class, 'index']);
+$router->post('/admin/banners/create', [HomeBannersController::class, 'store']);
+$router->post('/admin/banners/update', [HomeBannersController::class, 'update']);
+$router->post('/admin/banners/delete', [HomeBannersController::class, 'destroy']);
+
+$router->get('/admin/footer-gallery.html', [FooterGalleryController::class, 'htmlAlias']);
+$router->get('/admin/footer-gallery', [FooterGalleryController::class, 'index']);
+$router->post('/admin/footer-gallery/create', [FooterGalleryController::class, 'store']);
+$router->post('/admin/footer-gallery/update', [FooterGalleryController::class, 'update']);
+$router->post('/admin/footer-gallery/delete', [FooterGalleryController::class, 'destroy']);
 
 $router->get('/admin/pages.html', [PagesController::class, 'htmlAlias']);
 $router->get('/admin/pages', [PagesController::class, 'index']);

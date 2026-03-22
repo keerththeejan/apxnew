@@ -105,4 +105,77 @@ final class SiteConfig
             . '--tms-grad-to:' . $g2 . ';'
             . '}';
     }
+
+    public static function themeEnabled(): bool
+    {
+        return self::get('theme_enabled', '1') === '1';
+    }
+
+    public static function themeSwitcherEnabled(): bool
+    {
+        return self::get('theme_switcher_enabled', '1') === '1';
+    }
+
+    /** @return 'light'|'dark'|'auto' */
+    public static function themeMode(): string
+    {
+        $m = strtolower(trim(self::get('theme_mode', self::get('default_theme', 'light'))));
+        if ($m === 'dark') {
+            return 'dark';
+        }
+        if ($m === 'auto') {
+            return 'auto';
+        }
+
+        return 'light';
+    }
+
+    public static function clockEnabled(): bool
+    {
+        return self::get('clock_enabled', '0') === '1';
+    }
+
+    /** @return '12'|'24' */
+    public static function clockTimeFormat(): string
+    {
+        $f = strtolower(trim(self::get('clock_time_format', '24')));
+
+        return $f === '12' ? '12' : '24';
+    }
+
+    /**
+     * Initial Bootstrap/html theme for SSR (auto resolves to light; client refines).
+     *
+     * @return 'light'|'dark'
+     */
+    public static function effectiveBootstrapThemeForHtml(): string
+    {
+        if (!self::themeEnabled()) {
+            return 'light';
+        }
+        $mode = self::themeMode();
+        if ($mode === 'dark') {
+            return 'dark';
+        }
+
+        return 'light';
+    }
+
+    /**
+     * JSON-friendly config for public theme + clock scripts.
+     *
+     * @return array<string, mixed>
+     */
+    public static function publicThemeClientConfig(): array
+    {
+        return [
+            'themeEnabled' => self::themeEnabled(),
+            'themeSwitcher' => self::themeSwitcherEnabled() && self::themeEnabled(),
+            'themeMode' => self::themeMode(),
+            'clockEnabled' => self::clockEnabled(),
+            'clockFormat' => self::clockTimeFormat(),
+            'timezone' => self::get('app_timezone', 'UTC'),
+            'storageKey' => 'tms_theme',
+        ];
+    }
 }

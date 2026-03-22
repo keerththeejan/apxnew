@@ -8,6 +8,36 @@ use PDO;
 
 final class Service extends Model
 {
+    /**
+     * True when the `image_path` column exists.
+     * If missing, attempts `ALTER TABLE` once (needs DB user with ALTER privilege) so local installs self-heal.
+     */
+    public static function hasImagePathColumn(): bool
+    {
+        try {
+            $pdo = self::pdo();
+            $st = $pdo->query("SHOW COLUMNS FROM `services` LIKE 'image_path'");
+            if ($st !== false && $st->fetch() !== false) {
+                return true;
+            }
+        } catch (\Throwable) {
+            return false;
+        }
+
+        try {
+            self::pdo()->exec('ALTER TABLE `services` ADD COLUMN `image_path` VARCHAR(500) NULL AFTER `icon`');
+
+            return true;
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+            if (stripos($msg, 'Duplicate column') !== false || stripos($msg, '1060') !== false) {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     public static function active(): array
     {
         $stmt = self::pdo()->query('SELECT * FROM services WHERE is_active = 1 ORDER BY sort_order ASC, id ASC');
@@ -67,20 +97,48 @@ final class Service extends Model
     public static function create(array $data): int
     {
         $pdo = self::pdo();
-        $stmt = $pdo->prepare('INSERT INTO services (icon, title, description, link, sort_order, is_active) VALUES (:icon,:title,:desc,:link,:sort,:active)');
-        $stmt->execute([
-            ':icon' => (string) ($data['icon'] ?? ''),
-            ':title' => (string) ($data['title'] ?? ''),
-            ':desc' => (string) ($data['description'] ?? ''),
-            ':link' => (string) ($data['link'] ?? ''),
-            ':sort' => (int) ($data['sort_order'] ?? 0),
-            ':active' => (int) ($data['is_active'] ?? 1),
-        ]);
+        if (self::hasImagePathColumn()) {
+            $stmt = $pdo->prepare('INSERT INTO services (icon, image_path, title, description, link, sort_order, is_active) VALUES (:icon,:img,:title,:desc,:link,:sort,:active)');
+            $stmt->execute([
+                ':icon' => (string) ($data['icon'] ?? ''),
+                ':img' => (string) ($data['image_path'] ?? ''),
+                ':title' => (string) ($data['title'] ?? ''),
+                ':desc' => (string) ($data['description'] ?? ''),
+                ':link' => (string) ($data['link'] ?? ''),
+                ':sort' => (int) ($data['sort_order'] ?? 0),
+                ':active' => (int) ($data['is_active'] ?? 1),
+            ]);
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO services (icon, title, description, link, sort_order, is_active) VALUES (:icon,:title,:desc,:link,:sort,:active)');
+            $stmt->execute([
+                ':icon' => (string) ($data['icon'] ?? ''),
+                ':title' => (string) ($data['title'] ?? ''),
+                ':desc' => (string) ($data['description'] ?? ''),
+                ':link' => (string) ($data['link'] ?? ''),
+                ':sort' => (int) ($data['sort_order'] ?? 0),
+                ':active' => (int) ($data['is_active'] ?? 1),
+            ]);
+        }
+
         return (int) $pdo->lastInsertId();
     }
 
     public static function update(int $id, array $data): bool
     {
+        if (self::hasImagePathColumn()) {
+            $stmt = self::pdo()->prepare('UPDATE services SET icon=:icon, image_path=:img, title=:title, description=:desc, link=:link, sort_order=:sort, is_active=:active WHERE id=:id');
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':icon', (string) ($data['icon'] ?? ''));
+            $stmt->bindValue(':img', (string) ($data['image_path'] ?? ''));
+            $stmt->bindValue(':title', (string) ($data['title'] ?? ''));
+            $stmt->bindValue(':desc', (string) ($data['description'] ?? ''));
+            $stmt->bindValue(':link', (string) ($data['link'] ?? ''));
+            $stmt->bindValue(':sort', (int) ($data['sort_order'] ?? 0), PDO::PARAM_INT);
+            $stmt->bindValue(':active', (int) ($data['is_active'] ?? 1), PDO::PARAM_INT);
+
+            return $stmt->execute();
+        }
+
         $stmt = self::pdo()->prepare('UPDATE services SET icon=:icon, title=:title, description=:desc, link=:link, sort_order=:sort, is_active=:active WHERE id=:id');
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':icon', (string) ($data['icon'] ?? ''));
@@ -89,6 +147,7 @@ final class Service extends Model
         $stmt->bindValue(':link', (string) ($data['link'] ?? ''));
         $stmt->bindValue(':sort', (int) ($data['sort_order'] ?? 0), PDO::PARAM_INT);
         $stmt->bindValue(':active', (int) ($data['is_active'] ?? 1), PDO::PARAM_INT);
+
         return $stmt->execute();
     }
 

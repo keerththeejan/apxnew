@@ -16,4 +16,5 @@ view('layouts.admin', [
     'pageCount' => $pageCount ?? 1,
     'flashSuccess' => $flashSuccess ?? null,
     'flashError' => $flashError ?? null,
+    'servicesImageColumn' => $servicesImageColumn ?? true,
 ]);

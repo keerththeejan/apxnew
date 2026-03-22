@@ -150,6 +150,54 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
 
               <div class="tab-pane fade" id="pane-advanced" role="tabpanel">
                 <div class="row g-3">
+                  <div class="col-12">
+                    <h3 class="h6 text-white-50 text-uppercase mb-1">Theme &amp; clock</h3>
+                    <p class="small text-white-50 mb-0">Public site only. Theme uses CSS variables; live clock reads the timezone below.</p>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <input type="hidden" name="theme_enabled" value="0" />
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="theme_enabled" id="setThemeEnabled" value="1" <?= $v('theme_enabled', '1') === '1' ? 'checked' : '' ?> />
+                      <label class="form-check-label fw-bold" for="setThemeEnabled">Enable light/dark theme</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <input type="hidden" name="theme_switcher_enabled" value="0" />
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="theme_switcher_enabled" id="setThemeSwitcher" value="1" <?= $v('theme_switcher_enabled', '1') === '1' ? 'checked' : '' ?> />
+                      <label class="form-check-label fw-bold" for="setThemeSwitcher">Show theme toggle (sun/moon) in header</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Theme mode</label>
+                    <?php
+                      $tm = $v('theme_mode', '');
+                      if ($tm === '') {
+                          $tm = $v('default_theme', 'light') === 'dark' ? 'dark' : 'light';
+                      }
+                    ?>
+                    <select class="form-select" name="theme_mode" id="setThemeMode">
+                      <option value="light" <?= $tm === 'light' ? 'selected' : '' ?>>Light</option>
+                      <option value="dark" <?= $tm === 'dark' ? 'selected' : '' ?>>Dark</option>
+                      <option value="auto" <?= $tm === 'auto' ? 'selected' : '' ?>>Auto (match system)</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <input type="hidden" name="clock_enabled" value="0" />
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="clock_enabled" id="setClockEnabled" value="1" <?= $v('clock_enabled', '0') === '1' ? 'checked' : '' ?> />
+                      <label class="form-check-label fw-bold" for="setClockEnabled">Live clock in top bar</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Clock time format</label>
+                    <?php $cf = $v('clock_time_format', '24'); ?>
+                    <select class="form-select" name="clock_time_format">
+                      <option value="24" <?= $cf !== '12' ? 'selected' : '' ?>>24-hour</option>
+                      <option value="12" <?= $cf === '12' ? 'selected' : '' ?>>12-hour (AM/PM)</option>
+                    </select>
+                  </div>
+                  <div class="col-12"><hr class="border-secondary opacity-25 my-1" /></div>
                   <div class="col-12 col-md-4">
                     <label class="form-label fw-bold">Primary color</label>
                     <input class="form-control form-control-color w-100" name="theme_primary" value="<?= e($v('theme_primary', '#4f8cff')) ?>" />
@@ -158,13 +206,8 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
                     <label class="form-label fw-bold">Accent color</label>
                     <input class="form-control form-control-color w-100" name="theme_accent" value="<?= e($v('theme_accent', '#ff7a18')) ?>" />
                   </div>
-                  <div class="col-12 col-md-4">
-                    <label class="form-label fw-bold">Default theme</label>
-                    <select class="form-select" name="default_theme">
-                      <?php $dt = $v('default_theme', 'light'); ?>
-                      <option value="light" <?= $dt === 'light' ? 'selected' : '' ?>>Light</option>
-                      <option value="dark" <?= $dt === 'dark' ? 'selected' : '' ?>>Dark</option>
-                    </select>
+                  <div class="col-12 col-md-4 d-flex align-items-end">
+                    <div class="small text-white-50">Colors feed <code>--tms-*</code> variables on the public site.</div>
                   </div>
                   <div class="col-12 col-md-6">
                     <label class="form-label fw-bold">Gradient from</label>
@@ -179,8 +222,9 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
                     <input class="form-control" name="default_locale" value="<?= e($v('default_locale', 'en')) ?>" maxlength="10" />
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label fw-bold">Timezone</label>
-                    <input class="form-control" name="app_timezone" value="<?= e($v('app_timezone', 'UTC')) ?>" placeholder="Asia/Colombo" />
+                    <label class="form-label fw-bold">Timezone (IANA)</label>
+                    <input class="form-control" name="app_timezone" value="<?= e($v('app_timezone', 'UTC')) ?>" placeholder="Asia/Colombo" autocomplete="off" />
+                    <div class="form-text text-white-50 small">Used for the live clock and PHP date defaults.</div>
                   </div>
                   <div class="col-12 col-md-4">
                     <label class="form-label fw-bold">Currency format</label>

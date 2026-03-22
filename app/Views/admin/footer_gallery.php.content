@@ -1,0 +1,213 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$schemaReady = (bool) ($schemaReady ?? true);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$nextSortOrder = (int) ($nextSortOrder ?? 0);
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?>
+        <div class="alert alert-warning mb-0">The <code>footer_gallery</code> table is missing. Run <code>php database/migrate.php</code>.</div>
+      <?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <h2 class="sf-card-title mb-0">Footer gallery</h2>
+            <div class="sf-card-meta">Thumbnails in the site footer (responsive <strong class="text-white-50">3-column</strong> grid; stacks on small screens). Click opens the lightbox. Use sort order and Active to control what appears.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#fgModal" id="btnFgCreate"><i class="bi bi-plus-lg me-1"></i>Add image</button>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width:88px">Preview</th>
+                  <th>Label (alt)</th>
+                  <th>Path</th>
+                  <th>Sort</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($items === []): ?>
+                  <tr><td colspan="6" class="text-white-50">No gallery images yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($items as $row): ?>
+                  <?php
+                    $id = (int) ($row['id'] ?? 0);
+                    $p = trim((string) ($row['image_path'] ?? ''));
+                    $alt = (string) ($row['alt_text'] ?? '');
+                    $sort = (int) ($row['sort_order'] ?? 0);
+                    $active = (int) ($row['is_active'] ?? 1) === 1;
+                    $imgUrl = $p !== '' ? base_url(ltrim($p, '/')) : '';
+                  ?>
+                  <tr>
+                    <td>
+                      <?php if ($imgUrl !== ''): ?>
+                        <img src="<?= e($imgUrl) ?>" alt="" width="72" height="48" class="rounded border border-secondary" style="object-fit:cover" loading="lazy" />
+                      <?php else: ?>
+                        <span class="text-white-50">—</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="fw-bold"><?= e($alt !== '' ? $alt : '(no label)') ?></td>
+                    <td class="text-white-50 small text-break"><?= e($p) ?></td>
+                    <td><?= (int) $sort ?></td>
+                    <td><?= $active ? '<span class="badge text-bg-success">Active</span>' : '<span class="badge text-bg-secondary">Off</span>' ?></td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-outline-light btn-sm btn-fg-edit" data-bs-toggle="modal" data-bs-target="#fgModal"
+                        data-id="<?= $id ?>"
+                        data-alt="<?= e($alt) ?>"
+                        data-path="<?= e($p) ?>"
+                        data-url="<?= e($imgUrl) ?>"
+                        data-sort="<?= $sort ?>"
+                        data-active="<?= $active ? '1' : '0' ?>"
+                      ><i class="bi bi-pencil"></i></button>
+                      <form method="post" action="<?= e(base_url('/admin/footer-gallery/delete')) ?>" class="d-inline" onsubmit="return confirm('Remove this gallery image?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $id ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" title="Delete"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="fgModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" id="fgModalTitle">Add gallery image</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="fgForm" method="post" enctype="multipart/form-data" action="<?= e(base_url('/admin/footer-gallery/create')) ?>">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="fg_id" value="" />
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Image *</label>
+              <input class="form-control" type="file" name="gallery_image" id="fg_file" accept="image/jpeg,image/png,image/webp,image/gif" />
+              <div class="form-text text-white-50 small">
+                JPEG, PNG, WebP or GIF — max 3 MB. On the site each tile is <strong class="text-white-50">full width of its column</strong> with a fixed <strong class="text-white-50">64px</strong> height and <code class="text-white-50">object-fit: cover</code>, so use <strong class="text-white-50">landscape or square</strong> images (e.g. 600×400 or larger) for sharp, responsive thumbs.
+              </div>
+              <div class="mt-2 d-none" id="fgPreviewWrap">
+                <img src="" alt="" id="fgPreviewImg" class="rounded border border-secondary" style="max-height:120px;max-width:100%" />
+              </div>
+              <div class="form-check mt-2 d-none" id="fgClearWrap">
+                <input class="form-check-input" type="checkbox" name="clear_image" id="fg_clear" value="1" />
+                <label class="form-check-label" for="fg_clear">Remove current image (upload a new one required)</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Label / alt text</label>
+              <input class="form-control" name="alt_text" id="fg_alt" maxlength="220" placeholder="e.g. Visa · Flights · Hotels" />
+              <div class="form-text text-white-50">Shown under the image in the footer and used for accessibility.</div>
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label">Sort order</label>
+                <input class="form-control" type="number" name="sort_order" id="fg_sort" value="<?= (int) $nextSortOrder ?>" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Status</label>
+                <input type="hidden" name="is_active" value="0" />
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" name="is_active" id="fg_active" value="1" checked />
+                  <label class="form-check-label" for="fg_active">Active (visible on site)</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var form = document.getElementById('fgForm');
+    var title = document.getElementById('fgModalTitle');
+    var fileInput = document.getElementById('fg_file');
+    var previewWrap = document.getElementById('fgPreviewWrap');
+    var previewImg = document.getElementById('fgPreviewImg');
+    var clearWrap = document.getElementById('fgClearWrap');
+    var nextSort = <?= (int) $nextSortOrder ?>;
+
+    function resetCreate(){
+      form.action = <?= json_encode(base_url('/admin/footer-gallery/create')) ?>;
+      title.textContent = 'Add gallery image';
+      document.getElementById('fg_id').value = '';
+      document.getElementById('fg_alt').value = '';
+      document.getElementById('fg_sort').value = String(nextSort);
+      document.getElementById('fg_active').checked = true;
+      fileInput.removeAttribute('required');
+      fileInput.value = '';
+      previewWrap.classList.add('d-none');
+      clearWrap.classList.add('d-none');
+      fileInput.required = true;
+    }
+
+    document.getElementById('btnFgCreate').addEventListener('click', function(){
+      resetCreate();
+    });
+
+    document.querySelectorAll('.btn-fg-edit').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        form.action = <?= json_encode(base_url('/admin/footer-gallery/update')) ?>;
+        title.textContent = 'Edit gallery image';
+        document.getElementById('fg_id').value = btn.getAttribute('data-id') || '';
+        document.getElementById('fg_alt').value = btn.getAttribute('data-alt') || '';
+        document.getElementById('fg_sort').value = btn.getAttribute('data-sort') || '0';
+        document.getElementById('fg_active').checked = btn.getAttribute('data-active') === '1';
+        fileInput.required = false;
+        fileInput.value = '';
+        var u = btn.getAttribute('data-url') || '';
+        if (u) {
+          previewImg.src = u;
+          previewWrap.classList.remove('d-none');
+          clearWrap.classList.remove('d-none');
+        } else {
+          previewWrap.classList.add('d-none');
+          clearWrap.classList.add('d-none');
+        }
+        document.getElementById('fg_clear').checked = false;
+      });
+    });
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function(){
+        var f = fileInput.files && fileInput.files[0];
+        if (!f) { previewWrap.classList.add('d-none'); return; }
+        previewImg.src = URL.createObjectURL(f);
+        previewWrap.classList.remove('d-none');
+      });
+    }
+
+    var modalEl = document.getElementById('fgModal');
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', function(){ fileInput.value = ''; });
+    }
+  })();
+  </script>
+</template>

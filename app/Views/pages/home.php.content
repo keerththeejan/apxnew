@@ -2,37 +2,8 @@
 
 declare(strict_types=1);
 
-$heroHome = $heroHome ?? null;
+$homeBanners = $homeBanners ?? [];
 $settings = $settings ?? [];
-$bg = is_array($heroHome) ? trim((string) ($heroHome['bg_image_path'] ?? '')) : '';
-$heroStyle = '';
-if ($bg !== '') {
-    $u = base_url(ltrim($bg, '/'));
-    $heroStyle = ' style="background-image:linear-gradient(120deg, rgba(2,6,23,.78), rgba(2,6,23,.35)), url(' . e($u) . ');background-size:cover;background-position:center"';
-}
-
-$heroTitle = is_array($heroHome) && trim((string) ($heroHome['title'] ?? '')) !== ''
-    ? (string) $heroHome['title']
-    : (string) ($settings['site_name'] ?? 'HOME');
-$heroSub = is_array($heroHome) && ($heroHome['subtitle'] ?? null) !== null && trim((string) $heroHome['subtitle']) !== ''
-    ? (string) $heroHome['subtitle']
-    : (string) ($settings['home_hero_subtitle'] ?? '');
-$p1 = is_array($heroHome) ? trim((string) ($heroHome['primary_btn_label'] ?? '')) : '';
-$pu1 = is_array($heroHome) ? trim((string) ($heroHome['primary_btn_url'] ?? '')) : '';
-$p2 = is_array($heroHome) ? trim((string) ($heroHome['secondary_btn_label'] ?? '')) : '';
-$pu2 = is_array($heroHome) ? trim((string) ($heroHome['secondary_btn_url'] ?? '')) : '';
-if ($p1 === '') {
-    $p1 = (string) ($settings['nav_apply_label'] ?? 'Apply Now');
-}
-if ($pu1 === '') {
-    $pu1 = (string) ($settings['nav_apply_url'] ?? '/#apply');
-}
-if ($p2 === '') {
-    $p2 = (string) ($settings['nav_contact_label'] ?? 'Contact Us');
-}
-if ($pu2 === '') {
-    $pu2 = (string) ($settings['nav_contact_url'] ?? '/contact');
-}
 
 $services = $services ?? [];
 $ctaMid = $ctaMid ?? null;
@@ -40,17 +11,164 @@ $ctaNews = $ctaNews ?? null;
 $posts = $posts ?? [];
 $formFields = $formFields ?? [];
 
-?>
-<section class="hero hero-home"<?= $heroStyle ?> aria-label="Hero">
-  <div class="container hero-inner">
-    <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
-    <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
-    <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
-      <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
-      <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
+if (!function_exists('apx_home_banner_slide_markup')) {
+    /**
+     * @param array<string, mixed> $b
+     * @param array<string, mixed> $settings
+     */
+    function apx_home_banner_slide_markup(array $b, array $settings): void
+    {
+        $showImg = (int) ($b['show_image'] ?? 1) === 1;
+        $bg = trim((string) ($b['image_path'] ?? ''));
+        $classes = 'hero hero-home hero-banner-slide';
+        if (!$showImg || $bg === '') {
+            $classes .= ' hero-banner--text-only';
+        }
+        $attr = ' class="' . e($classes) . '"';
+        if ($showImg && $bg !== '') {
+            $u = base_url(ltrim($bg, '/'));
+            $attr .= ' style="background-image:linear-gradient(120deg, rgba(2,6,23,.78), rgba(2,6,23,.35)), url(' . e($u) . ');background-size:cover;background-position:center"';
+        }
+
+        $heroTitle = trim((string) ($b['title'] ?? ''));
+        if ($heroTitle === '') {
+            $heroTitle = (string) ($settings['site_name'] ?? 'HOME');
+        }
+        $heroSub = trim((string) ($b['subtitle'] ?? ''));
+        if ($heroSub === '') {
+            $heroSub = (string) ($settings['home_hero_subtitle'] ?? '');
+        }
+
+        $p1 = trim((string) ($b['button1_text'] ?? ''));
+        $pu1 = trim((string) ($b['button1_link'] ?? ''));
+        $p2 = trim((string) ($b['button2_text'] ?? ''));
+        $pu2 = trim((string) ($b['button2_link'] ?? ''));
+        if ($p1 === '') {
+            $p1 = (string) ($settings['nav_apply_label'] ?? 'Apply Now');
+        }
+        if ($pu1 === '') {
+            $pu1 = (string) ($settings['nav_apply_url'] ?? '/#apply');
+        }
+        if ($p2 === '') {
+            $p2 = (string) ($settings['nav_contact_label'] ?? 'Contact Us');
+        }
+        if ($pu2 === '') {
+            $pu2 = (string) ($settings['nav_contact_url'] ?? '/contact');
+        }
+        ?>
+  <section<?= $attr ?> aria-label="Hero">
+    <div class="container hero-inner">
+      <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
+      <?php if ($heroSub !== ''): ?>
+        <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
+      <?php endif; ?>
+      <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
+        <?php if ($p1 !== ''): ?>
+          <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
+        <?php endif; ?>
+        <?php if ($p2 !== ''): ?>
+          <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
+        <?php endif; ?>
+      </div>
     </div>
+  </section>
+        <?php
+    }
+}
+
+?>
+<?php if ($homeBanners === []): ?>
+  <?php
+    $fallback = [
+        'title' => (string) ($settings['site_name'] ?? 'HOME'),
+        'subtitle' => (string) ($settings['home_hero_subtitle'] ?? ''),
+        'image_path' => '',
+        'show_image' => 0,
+        'button1_text' => (string) ($settings['nav_apply_label'] ?? 'Apply Now'),
+        'button1_link' => (string) ($settings['nav_apply_url'] ?? '/#apply'),
+        'button2_text' => (string) ($settings['nav_contact_label'] ?? 'Contact Us'),
+        'button2_link' => (string) ($settings['nav_contact_url'] ?? '/contact'),
+    ];
+    apx_home_banner_slide_markup($fallback, $settings);
+  ?>
+<?php elseif (count($homeBanners) === 1): ?>
+  <?php apx_home_banner_slide_markup($homeBanners[0], $settings); ?>
+<?php else: ?>
+  <div id="homeHeroCarousel" class="carousel slide home-hero-carousel" data-bs-ride="carousel" data-bs-interval="7000" data-bs-pause="hover" aria-label="Homepage banners">
+    <div class="carousel-indicators">
+      <?php foreach ($homeBanners as $idx => $_): ?>
+        <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="<?= (int) $idx ?>" class="<?= $idx === 0 ? 'active' : '' ?>" aria-current="<?= $idx === 0 ? 'true' : 'false' ?>" aria-label="Slide <?= (int) ($idx + 1) ?>"></button>
+      <?php endforeach; ?>
+    </div>
+    <div class="carousel-inner">
+      <?php foreach ($homeBanners as $idx => $b): ?>
+        <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
+          <?php
+            $showImg = (int) ($b['show_image'] ?? 1) === 1;
+            $bg = trim((string) ($b['image_path'] ?? ''));
+            $classes = 'hero hero-home hero-banner-slide h-100';
+            if (!$showImg || $bg === '') {
+                $classes .= ' hero-banner--text-only';
+            }
+            $attr = ' class="' . e($classes) . '"';
+            if ($showImg && $bg !== '') {
+                $u = base_url(ltrim($bg, '/'));
+                $attr .= ' style="background-image:linear-gradient(120deg, rgba(2,6,23,.78), rgba(2,6,23,.35)), url(' . e($u) . ');background-size:cover;background-position:center"';
+            }
+            $heroTitle = trim((string) ($b['title'] ?? ''));
+            if ($heroTitle === '') {
+                $heroTitle = (string) ($settings['site_name'] ?? 'HOME');
+            }
+            $heroSub = trim((string) ($b['subtitle'] ?? ''));
+            if ($heroSub === '') {
+                $heroSub = (string) ($settings['home_hero_subtitle'] ?? '');
+            }
+            $p1 = trim((string) ($b['button1_text'] ?? ''));
+            $pu1 = trim((string) ($b['button1_link'] ?? ''));
+            $p2 = trim((string) ($b['button2_text'] ?? ''));
+            $pu2 = trim((string) ($b['button2_link'] ?? ''));
+            if ($p1 === '') {
+                $p1 = (string) ($settings['nav_apply_label'] ?? 'Apply Now');
+            }
+            if ($pu1 === '') {
+                $pu1 = (string) ($settings['nav_apply_url'] ?? '/#apply');
+            }
+            if ($p2 === '') {
+                $p2 = (string) ($settings['nav_contact_label'] ?? 'Contact Us');
+            }
+            if ($pu2 === '') {
+                $pu2 = (string) ($settings['nav_contact_url'] ?? '/contact');
+            }
+          ?>
+          <section<?= $attr ?> aria-label="Hero slide <?= (int) ($idx + 1) ?>">
+            <div class="container hero-inner">
+              <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
+              <?php if ($heroSub !== ''): ?>
+                <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
+              <?php endif; ?>
+              <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
+                <?php if ($p1 !== ''): ?>
+                  <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
+                <?php endif; ?>
+                <?php if ($p2 !== ''): ?>
+                  <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
+                <?php endif; ?>
+              </div>
+            </div>
+          </section>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
   </div>
-</section>
+<?php endif; ?>
 
 <section class="py-5">
   <div class="container">
@@ -66,9 +184,32 @@ $formFields = $formFields ?? [];
           $href = resolve_public_href($link);
         ?>
         <div class="col-12 col-md-6 col-lg-4 js-reveal">
-          <a class="service-card glass-card" href="<?= e($href) ?>" aria-label="<?= e((string) ($svc['title'] ?? '')) ?>">
+          <?php
+            $svcImg = trim((string) ($svc['image_path'] ?? ''));
+            $svcImgUrl = $svcImg !== '' ? base_url(ltrim($svcImg, '/')) : '';
+            $svcIcon = trim((string) ($svc['icon'] ?? ''));
+            if ($svcIcon === '') {
+                $svcIcon = '✈️';
+            }
+            $iconMarkup = '';
+            if (preg_match('/^bi\s+/i', $svcIcon)) {
+                $iconMarkup = '<i class="' . e(trim($svcIcon)) . '" aria-hidden="true"></i>';
+            } elseif (preg_match('/^bi-[a-z0-9-]+$/i', $svcIcon)) {
+                $iconMarkup = '<i class="bi ' . e($svcIcon) . '" aria-hidden="true"></i>';
+            } else {
+                $iconMarkup = e($svcIcon);
+            }
+          ?>
+          <a class="service-card glass-card<?= $svcImgUrl !== '' ? ' service-card--has-image' : '' ?>" href="<?= e($href) ?>" aria-label="<?= e((string) ($svc['title'] ?? '')) ?>">
+            <?php if ($svcImgUrl !== ''): ?>
+              <div class="service-card-thumb" aria-hidden="true">
+                <img src="<?= e($svcImgUrl) ?>" alt="" loading="lazy" decoding="async" />
+              </div>
+            <?php endif; ?>
             <div class="service-card-top">
-              <div class="service-icon" aria-hidden="true"><?= e((string) ($svc['icon'] ?? '✈️')) ?></div>
+              <?php if ($svcImgUrl === ''): ?>
+                <div class="service-icon" aria-hidden="true"><?= $iconMarkup ?></div>
+              <?php endif; ?>
               <div class="service-title"><?= e(strtoupper((string) ($svc['title'] ?? ''))) ?></div>
             </div>
             <div class="service-desc"><?= e((string) ($svc['description'] ?? '')) ?></div>

@@ -45,6 +45,9 @@ if (!function_exists('apx_nav_icon_html')) {
 }
 
 $logoPath = (string) ($settings['site_logo_path'] ?? '/images/logo.png');
+$themeEnabled = (($settings['theme_enabled'] ?? '1') === '1');
+$themeSwitcherEnabled = (($settings['theme_switcher_enabled'] ?? '1') === '1');
+$clockEnabled = (($settings['clock_enabled'] ?? '0') === '1');
 $navLinks = $navMenu['links'] ?? [];
 $navCtas = $navMenu['ctas'] ?? [];
 if ($navCtas === []) {
@@ -73,6 +76,9 @@ if ($navCtas === []) {
       <div class="top-contact-left">
         <a class="top-contact-link" href="mailto:<?= e($settings['contact_email'] ?? 'info@apx.com') ?>" aria-label="Email">✉️ <?= e($settings['contact_email'] ?? 'info@apx.com') ?></a>
         <a class="top-contact-link" href="tel:<?= e($settings['contact_phone'] ?? '+94770000000') ?>" aria-label="Phone">📞 <?= e($settings['contact_phone_label'] ?? '+94 77 000 0000') ?></a>
+        <?php if ($clockEnabled): ?>
+          <time class="live-clock" id="liveClock" datetime="" aria-live="polite">--:--:--</time>
+        <?php endif; ?>
       </div>
       <div class="top-contact-right" aria-label="Social links">
         <div class="top-social-links">
@@ -85,7 +91,11 @@ if ($navCtas === []) {
             <a class="top-social" href="<?= e(resolve_public_href($surl)) ?>" aria-label="<?= e($slabel) ?>" title="<?= e($slabel) ?>" rel="noopener"><?= e($hint) ?></a>
           <?php endforeach; ?>
           <a class="top-social" href="<?= e(base_url('/admin/login')) ?>" aria-label="Admin login" title="Admin login">A</a>
-          <button type="button" class="top-social theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Theme">🌙</button>
+          <?php if ($themeEnabled && $themeSwitcherEnabled): ?>
+          <button type="button" class="top-social theme-toggle" id="themeToggle" data-apx-theme="light" aria-label="Toggle theme" title="Theme">
+            <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+          </button>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -99,7 +109,8 @@ if ($navCtas === []) {
       <button class="hamb" type="button" aria-expanded="false" aria-controls="navbar-menu" aria-label="Open menu">Menu</button>
 
       <div id="navbar-menu" class="navbar-menu navbar-collapse">
-        <ul class="primary-links navbar-nav ms-lg-auto mb-0 align-items-lg-center flex-column flex-lg-row gap-lg-1" aria-label="Primary">
+        <nav class="primary-nav" aria-label="Primary">
+        <ul class="primary-links navbar-nav mb-0 align-items-lg-center flex-column flex-lg-row">
           <?php foreach ($navLinks as $item): ?>
             <?php
               $children = $item['children'] ?? [];
@@ -134,6 +145,7 @@ if ($navCtas === []) {
             <?php endif; ?>
           <?php endforeach; ?>
         </ul>
+        </nav>
 
         <div class="nav-cta flex-shrink-0" role="group" aria-label="Primary actions">
           <?php foreach ($navCtas as $i => $cta): ?>

@@ -1,7 +1,18 @@
-<section class="hero" style="background-image:url('<?= e(base_url('/images/hotel.jpg')) ?>');background-size:cover;background-position:center;">
+<?php
+  $page = $page ?? null;
+  $heroTitle = $page !== null && trim((string) ($page['title'] ?? '')) !== ''
+    ? trim((string) $page['title'])
+    : 'Hotels';
+  $heroSub = $page !== null ? trim((string) ($page['meta_description'] ?? '')) : '';
+  if ($heroSub === '') {
+      $heroSub = 'Comfortable stays curated for your destination.';
+  }
+?>
+<?php /* Gradient-only — hotel stock images often include large lettering behind the heading */ ?>
+<section class="hero hero-generic" aria-label="Hotels">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">HOTELS</h1>
-    <p class="hero-sub js-reveal">Comfortable stays curated for your destination.</p>
+    <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
+    <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
   </div>
 </section>
 

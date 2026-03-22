@@ -1,0 +1,305 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$schemaReady = (bool) ($schemaReady ?? true);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$nextOrderIndex = (int) ($nextOrderIndex ?? 0);
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?>
+        <div class="alert alert-warning mb-0">
+          The <code>home_banners</code> table is missing. Run <code>php database/migrate.php</code> from the project folder (or import the migration SQL).
+        </div>
+      <?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <h2 class="sf-card-title mb-0">Homepage hero banners</h2>
+            <div class="sf-card-meta">Images, copy, buttons, text-only mode, order &amp; carousel — banner art is full-width and responsive (wide landscape photos work best).</div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#bannerModal" id="btnBannerCreate">
+            <i class="bi bi-plus-lg me-1"></i>Add banner
+          </button>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width:72px">Order</th>
+                  <th>Title</th>
+                  <th class="d-none d-md-table-cell">Mode</th>
+                  <th class="d-none d-lg-table-cell">Preview</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($items === []): ?>
+                  <tr><td colspan="6" class="text-white-50">No banners yet. Add one to control the homepage hero.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($items as $row): ?>
+                  <?php
+                    $id = (int) ($row['id'] ?? 0);
+                    $title = (string) ($row['title'] ?? '');
+                    $sub = (string) ($row['subtitle'] ?? '');
+                    $img = trim((string) ($row['image_path'] ?? ''));
+                    $showImg = (int) ($row['show_image'] ?? 1) === 1;
+                    $b1t = (string) ($row['button1_text'] ?? '');
+                    $b1u = (string) ($row['button1_link'] ?? '');
+                    $b2t = (string) ($row['button2_text'] ?? '');
+                    $b2u = (string) ($row['button2_link'] ?? '');
+                    $oi = (int) ($row['order_index'] ?? 0);
+                    $active = (int) ($row['is_active'] ?? 1) === 1;
+                    $imgUrl = $img !== '' ? base_url(ltrim($img, '/')) : '';
+                  ?>
+                  <tr>
+                    <td class="text-white-50"><?= (int) $oi ?></td>
+                    <td class="fw-bold"><?= e($title !== '' ? $title : '(untitled)') ?></td>
+                    <td class="d-none d-md-table-cell"> <?= $showImg ? '<span class="badge text-bg-info">Image</span>' : '<span class="badge text-bg-secondary">Text only</span>' ?></td>
+                    <td class="d-none d-lg-table-cell">
+                      <?php if ($showImg && $imgUrl !== ''): ?>
+                        <img src="<?= e($imgUrl) ?>" alt="" width="72" height="40" class="rounded border border-secondary object-fit-cover" style="object-fit:cover;max-height:40px" loading="lazy" />
+                      <?php else: ?>
+                        <span class="text-white-50 small">—</span>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <?php if ($active): ?>
+                        <span class="badge text-bg-success">Active</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-secondary">Off</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-outline-light btn-sm btn-banner-edit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#bannerModal"
+                        data-id="<?= $id ?>"
+                        data-title="<?= e($title) ?>"
+                        data-subtitle="<?= e(str_replace(["\r\n", "\r", "\n"], ' ', $sub)) ?>"
+                        data-show_image="<?= $showImg ? '1' : '0' ?>"
+                        data-image_path="<?= e($img) ?>"
+                        data-image_url="<?= e($imgUrl) ?>"
+                        data-button1_text="<?= e($b1t) ?>"
+                        data-button1_link="<?= e($b1u) ?>"
+                        data-button2_text="<?= e($b2t) ?>"
+                        data-button2_link="<?= e($b2u) ?>"
+                        data-order_index="<?= $oi ?>"
+                        data-is_active="<?= $active ? '1' : '0' ?>"
+                      ><i class="bi bi-pencil"></i></button>
+                      <form method="post" action="<?= e(base_url('/admin/banners/delete')) ?>" class="d-inline" onsubmit="return confirm('Delete this banner?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $id ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" title="Delete"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="bannerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" id="bannerModalTitle">Add banner</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="bannerForm" method="post" enctype="multipart/form-data" action="<?= e(base_url('/admin/banners/create')) ?>">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="banner_id" value="" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-md-8">
+                <label class="form-label">Title</label>
+                <input class="form-control" name="title" id="banner_title" required maxlength="220" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Sort order</label>
+                <input class="form-control" type="number" name="order_index" id="banner_order" value="<?= (int) $nextOrderIndex ?>" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Subtitle / description</label>
+                <textarea class="form-control" name="subtitle" id="banner_subtitle" rows="3" maxlength="500"></textarea>
+              </div>
+              <div class="col-12">
+                <input type="hidden" name="show_image" value="0" />
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" name="show_image" id="banner_show_image" value="1" checked />
+                  <label class="form-check-label" for="banner_show_image">Show background image (off = gradient / text-only hero)</label>
+                </div>
+              </div>
+              <div class="col-12" id="bannerImageBlock">
+                <label class="form-label">Banner image</label>
+                <input class="form-control" type="file" name="banner_image" id="banner_image" accept="image/jpeg,image/png,image/webp,image/gif" />
+                <div class="form-text text-white-50 small">
+                  JPEG, PNG, WebP or GIF — max 3 MB. Use a <strong class="text-white-50">wide landscape</strong> file (e.g. <strong class="text-white-50">1920×900</strong> or larger). On the site it is applied as a <strong class="text-white-50">full-width</strong> hero background with <code class="text-white-50">background-size: cover</code> and centered positioning, so it stays responsive and fills the slide on all screen sizes.
+                </div>
+                <div class="mt-2 d-none" id="bannerPreviewWrap">
+                  <img src="" alt="" id="bannerPreviewImg" class="rounded border border-secondary" style="max-height:120px;max-width:100%" />
+                </div>
+                <div class="form-check mt-2 d-none" id="bannerClearWrap">
+                  <input class="form-check-input" type="checkbox" name="clear_image" id="banner_clear_image" value="1" />
+                  <label class="form-check-label" for="banner_clear_image">Remove current image</label>
+                </div>
+                <div class="mt-2 small text-white-50 d-none" id="bannerCurrentPath"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Button 1 — text</label>
+                <input class="form-control" name="button1_text" id="banner_b1t" maxlength="120" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Button 1 — link</label>
+                <input class="form-control" name="button1_link" id="banner_b1u" maxlength="500" placeholder="/about or https://…" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Button 2 — text</label>
+                <input class="form-control" name="button2_text" id="banner_b2t" maxlength="120" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Button 2 — link</label>
+                <input class="form-control" name="button2_link" id="banner_b2u" maxlength="500" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="is_active" id="banner_active">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="bannerSubmitBtn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var form = document.getElementById('bannerForm');
+    var modalTitle = document.getElementById('bannerModalTitle');
+    var idEl = document.getElementById('banner_id');
+    var fileInput = document.getElementById('banner_image');
+    var previewWrap = document.getElementById('bannerPreviewWrap');
+    var previewImg = document.getElementById('bannerPreviewImg');
+    var clearWrap = document.getElementById('bannerClearWrap');
+    var currentPath = document.getElementById('bannerCurrentPath');
+    var showImgChk = document.getElementById('banner_show_image');
+    var imageBlock = document.getElementById('bannerImageBlock');
+    var nextOrder = <?= (int) $nextOrderIndex ?>;
+
+    function toggleImageBlock(){
+      if (!imageBlock) return;
+      imageBlock.style.opacity = showImgChk && showImgChk.checked ? '1' : '0.55';
+      imageBlock.querySelectorAll('input,button').forEach(function(el){
+        if (el === showImgChk) return;
+        el.disabled = showImgChk && !showImgChk.checked;
+      });
+    }
+    if (showImgChk) {
+      showImgChk.addEventListener('change', toggleImageBlock);
+    }
+
+    function resetCreate(){
+      if (!form) return;
+      form.action = <?= json_encode(base_url('/admin/banners/create')) ?>;
+      modalTitle.textContent = 'Add banner';
+      idEl.value = '';
+      document.getElementById('banner_title').value = '';
+      document.getElementById('banner_subtitle').value = '';
+      document.getElementById('banner_order').value = String(nextOrder);
+      showImgChk.checked = true;
+      fileInput.value = '';
+      previewWrap.classList.add('d-none');
+      clearWrap.classList.add('d-none');
+      currentPath.classList.add('d-none');
+      document.getElementById('banner_b1t').value = '';
+      document.getElementById('banner_b1u').value = '';
+      document.getElementById('banner_b2t').value = '';
+      document.getElementById('banner_b2u').value = '';
+      document.getElementById('banner_active').value = '1';
+      document.getElementById('banner_clear_image').checked = false;
+      toggleImageBlock();
+    }
+
+    document.getElementById('btnBannerCreate').addEventListener('click', function(){
+      resetCreate();
+    });
+
+    document.querySelectorAll('.btn-banner-edit').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        form.action = <?= json_encode(base_url('/admin/banners/update')) ?>;
+        modalTitle.textContent = 'Edit banner';
+        idEl.value = btn.getAttribute('data-id') || '';
+        document.getElementById('banner_title').value = btn.getAttribute('data-title') || '';
+        document.getElementById('banner_subtitle').value = btn.getAttribute('data-subtitle') || '';
+        document.getElementById('banner_order').value = btn.getAttribute('data-order_index') || '0';
+        showImgChk.checked = (btn.getAttribute('data-show_image') === '1');
+        fileInput.value = '';
+        var iu = btn.getAttribute('data-image_url') || '';
+        if (iu) {
+          previewImg.src = iu;
+          previewWrap.classList.remove('d-none');
+          clearWrap.classList.remove('d-none');
+          currentPath.textContent = 'Stored: ' + (btn.getAttribute('data-image_path') || '');
+          currentPath.classList.remove('d-none');
+        } else {
+          previewWrap.classList.add('d-none');
+          clearWrap.classList.add('d-none');
+          currentPath.classList.add('d-none');
+        }
+        document.getElementById('banner_clear_image').checked = false;
+        document.getElementById('banner_b1t').value = btn.getAttribute('data-button1_text') || '';
+        document.getElementById('banner_b1u').value = btn.getAttribute('data-button1_link') || '';
+        document.getElementById('banner_b2t').value = btn.getAttribute('data-button2_text') || '';
+        document.getElementById('banner_b2u').value = btn.getAttribute('data-button2_link') || '';
+        document.getElementById('banner_active').value = btn.getAttribute('data-is_active') === '1' ? '1' : '0';
+        toggleImageBlock();
+      });
+    });
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function(){
+        var f = fileInput.files && fileInput.files[0];
+        if (!f) {
+          previewWrap.classList.add('d-none');
+          return;
+        }
+        var url = URL.createObjectURL(f);
+        previewImg.src = url;
+        previewWrap.classList.remove('d-none');
+      });
+    }
+
+    var modalEl = document.getElementById('bannerModal');
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', function(){
+        fileInput.value = '';
+      });
+    }
+    toggleImageBlock();
+  })();
+  </script>
+</template>

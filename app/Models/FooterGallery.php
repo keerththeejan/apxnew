@@ -24,6 +24,22 @@ final class FooterGallery extends Model
         }, []);
     }
 
+    /** @return array<string, mixed>|null */
+    public static function findById(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+
+        return self::safe(function () use ($id): ?array {
+            $stmt = self::pdo()->prepare('SELECT * FROM footer_gallery WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch();
+
+            return $row !== false ? $row : null;
+        }, null);
+    }
+
     public static function create(array $data): int
     {
         $pdo = self::pdo();

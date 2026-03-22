@@ -545,14 +545,19 @@ final class NavItem extends Model
         if ($url === '') {
             return '';
         }
+        // Always compare path + fragment so /apx/about matches http://host/apx/about (APP_BASE_URL).
         if (preg_match('#^https?://#i', $url) === 1) {
-            return strtolower($url);
+            $path = parse_url($url, PHP_URL_PATH);
+            if (!is_string($path) || $path === '') {
+                $path = '/';
+            }
+        } else {
+            $path = parse_url($url, PHP_URL_PATH);
+            if (!is_string($path) || $path === '') {
+                $path = $url;
+            }
         }
-        $path = parse_url($url, PHP_URL_PATH);
-        if (!is_string($path) || $path === '') {
-            $path = $url;
-        }
-        $path = '/' . ltrim($path, '/');
+        $path = '/' . ltrim((string) $path, '/');
         if ($path !== '/' && str_ends_with($path, '/')) {
             $path = rtrim($path, '/');
         }

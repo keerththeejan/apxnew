@@ -24,6 +24,14 @@ INSERT INTO settings (`key`, `value`) VALUES
 ('about_text','We provide travel services including visas, flights, hotels, and insurance.')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
+INSERT INTO settings (`key`, `value`) VALUES
+('theme_enabled','1'),
+('theme_switcher_enabled','1'),
+('theme_mode','light'),
+('clock_enabled','0'),
+('clock_time_format','24')
+ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
+
 INSERT INTO destinations (name, slug, country, description, visa_note, is_featured, is_active, sort_order) VALUES
 ('Dubai','dubai','UAE','A modern city with iconic attractions and world-class shopping.','Tourist visa required for many nationalities. Contact us for the latest checklist.',1,1,1),
 ('Singapore','singapore','Singapore','A clean, vibrant city-state known for attractions and food.','E-visa may be required depending on nationality.',1,1,2),
