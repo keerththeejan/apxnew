@@ -1,0 +1,70 @@
+<section class="hero" style="background-image:url('<?= e(base_url('/images/hotel.jpg')) ?>');background-size:cover;background-position:center;">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">HOTELS</h1>
+    <p class="hero-sub js-reveal">Comfortable stays curated for your destination.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-12 col-lg-5 js-reveal">
+        <div class="card shadow-sm" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h2 class="fw-bold">Book a hotel</h2>
+            <form method="post" action="<?= e(base_url('/bookings/hotel')) ?>">
+              <?= csrf_field() ?>
+              <div class="mb-2">
+                <label class="form-label">Full name *</label>
+                <input class="form-control" name="full_name" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Phone *</label>
+                <input class="form-control" name="phone" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Email</label>
+                <input class="form-control" name="email" type="email" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Destination</label>
+                <input class="form-control" name="destination" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Check-in date</label>
+                <input class="form-control" name="travel_date" type="date" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" name="notes" rows="3"></textarea>
+              </div>
+              <button class="btn btn-primary w-100" type="submit">Request booking</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-7 js-reveal">
+        <div class="text-center mb-3">
+          <h2 class="fw-bold mb-1">Featured hotels</h2>
+          <p class="text-secondary mb-0">Handpicked stays for your trip.</p>
+        </div>
+        <div class="row g-3">
+          <?php foreach (($hotels ?? []) as $h): ?>
+            <div class="col-12 col-md-6">
+              <div class="card h-100" style="border-radius:16px">
+                <div class="card-body">
+                  <div class="fw-bold"><?= e((string) $h['name']) ?></div>
+                  <div class="text-secondary small"><?= e((string) ($h['city'] ?? '')) ?><?= !empty($h['country']) ? ', ' . e((string) $h['country']) : '' ?></div>
+                  <?php if (!empty($h['price_from'])): ?>
+                    <div class="mt-2"><span class="badge text-bg-primary">From <?= e((string) $h['price_from']) ?></span></div>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

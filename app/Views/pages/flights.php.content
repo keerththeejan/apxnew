@@ -1,0 +1,81 @@
+<section class="hero" style="background-image:url('<?= e(base_url('/images/flight.jpg')) ?>');background-size:cover;background-position:center;">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">FLIGHTS</h1>
+    <p class="hero-sub js-reveal">Ticketing, routing, and best fare support.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-12 col-lg-7 js-reveal">
+        <div class="card" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h2 class="fw-bold">Search flights</h2>
+            <p class="text-secondary">Send your route and dates. We’ll reply with options that fit your budget.</p>
+
+            <form method="post" action="<?= e(base_url('/bookings/flight')) ?>">
+              <?= csrf_field() ?>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Full name *</label>
+                  <input class="form-control" name="full_name" required />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Phone *</label>
+                  <input class="form-control" name="phone" required />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Email</label>
+                  <input class="form-control" name="email" type="email" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Destination / route</label>
+                  <input class="form-control" name="destination" placeholder="e.g. CMB → DXB" />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Travel date</label>
+                  <input class="form-control" name="travel_date" type="date" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Notes</label>
+                  <textarea class="form-control" name="notes" rows="3"></textarea>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-primary px-4" type="submit">Request options</button>
+                </div>
+              </div>
+            </form>
+
+            <?php if (!empty($deals)): ?>
+              <hr class="my-4" />
+              <h3 class="h5 fw-bold mb-3">Flight deals</h3>
+              <div class="row g-3">
+                <?php foreach ($deals as $d): ?>
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                      <div class="fw-bold"><?= e((string) $d['title']) ?></div>
+                      <div class="text-secondary small"><?= e((string) ($d['summary'] ?? '')) ?></div>
+                      <?php if (!empty($d['price_from'])): ?>
+                        <div class="mt-2"><span class="badge text-bg-primary">From <?= e((string) $d['price_from']) ?></span></div>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-5 js-reveal" id="finance">
+        <div class="card shadow-sm" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h3 class="fw-bold">Finance</h3>
+            <p class="text-secondary mb-0">Flexible solutions to support your travel plans.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

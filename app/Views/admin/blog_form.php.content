@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+$post = $post ?? null;
+$mode = (string) ($mode ?? 'create');
+$isEdit = $post !== null;
+$id = $isEdit ? (int) ($post['id'] ?? 0) : 0;
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+$title = $isEdit ? (string) ($post['title'] ?? '') : '';
+$slug = $isEdit ? (string) ($post['slug'] ?? '') : '';
+$excerpt = $isEdit ? (string) ($post['excerpt'] ?? '') : '';
+$content = $isEdit ? (string) ($post['content'] ?? '') : '';
+$cover = $isEdit ? (string) ($post['cover_image_path'] ?? '') : '';
+$status = $isEdit ? (string) ($post['status'] ?? 'draft') : 'draft';
+$publishedAt = '';
+if ($isEdit && !empty($post['published_at'])) {
+    $publishedAt = str_replace(' ', 'T', substr((string) $post['published_at'], 0, 16));
+}
+
+$action = $isEdit ? base_url('/admin/blog/update') : base_url('/admin/blog/store');
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12 col-xl-10">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="sf-card-title mb-0"><?= $isEdit ? 'Edit post' : 'New post' ?></h2>
+            <div class="sf-card-meta"><a href="<?= e(base_url('/admin/blog')) ?>" class="text-white-50 text-decoration-none">← Back to list</a></div>
+          </div>
+        </div>
+        <div class="sf-card-body">
+          <form method="post" action="<?= e($action) ?>">
+            <?= csrf_field() ?>
+            <?php if ($isEdit): ?>
+              <input type="hidden" name="id" value="<?= $id ?>" />
+            <?php endif; ?>
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <label class="form-label fw-bold">Title</label>
+                <input class="form-control" name="title" id="bf_title" required value="<?= e($title) ?>" />
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-bold">Slug</label>
+                <input class="form-control" name="slug" value="<?= e($slug) ?>" placeholder="auto from title" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Excerpt</label>
+                <textarea class="form-control" name="excerpt" rows="2"><?= e($excerpt) ?></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Content</label>
+                <textarea class="form-control font-monospace" name="content" rows="16"><?= e($content) ?></textarea>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-bold">Cover image path</label>
+                <input class="form-control" name="cover_image_path" value="<?= e($cover) ?>" placeholder="/images/..." />
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label fw-bold">Status</label>
+                <select class="form-select" name="status">
+                  <option value="draft" <?= $status === 'draft' ? 'selected' : '' ?>>draft</option>
+                  <option value="published" <?= $status === 'published' ? 'selected' : '' ?>>published</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label fw-bold">Published at</label>
+                <input class="form-control" type="datetime-local" name="published_at" value="<?= e($publishedAt) ?>" />
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-primary" type="submit"><i class="bi bi-save me-2"></i>Save</button>
+              <a class="btn btn-outline-light" href="<?= e(base_url('/admin/blog')) ?>">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <?php if (!$isEdit): ?>
+  <script>
+  (function(){
+    var t = document.getElementById('bf_title');
+    var sl = document.querySelector('input[name="slug"]');
+    if (!t || !sl) return;
+    t.addEventListener('blur', function(){
+      if (sl.value.trim() !== '') return;
+      var s = t.value.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+      if (s) sl.value = s;
+    });
+  })();
+  </script>
+  <?php endif; ?>
+</template>

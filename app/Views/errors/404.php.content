@@ -1,0 +1,12 @@
+<section class="tms-error-page py-5">
+  <div class="container" style="max-width:560px">
+    <div class="card shadow-sm border-0" style="border-radius:18px">
+      <div class="card-body p-4 p-md-5">
+        <p class="text-secondary small text-uppercase fw-bold mb-2">Error 404</p>
+        <h1 class="h3 fw-bold mb-3" style="line-height:1.35">Page not found</h1>
+        <p class="text-secondary mb-4">The page you requested does not exist or has been moved.</p>
+        <a class="btn btn-primary" href="<?= e(base_url('/')) ?>">Back to home</a>
+      </div>
+    </div>
+  </div>
+</section>

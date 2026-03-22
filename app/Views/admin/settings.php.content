@@ -1,0 +1,235 @@
+<?php
+
+declare(strict_types=1);
+
+$s = $settings ?? [];
+$v = static function (string $key, string $default = '') use ($s): string {
+    return (string) ($s[$key] ?? $default);
+};
+
+$socialRows = [];
+$rawSocial = $v('social_links_json', '');
+if ($rawSocial !== '') {
+    $decoded = json_decode($rawSocial, true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $socialRows[] = [
+                'label' => (string) ($row['label'] ?? ''),
+                'url' => (string) ($row['url'] ?? ''),
+            ];
+        }
+    }
+}
+if ($socialRows === []) {
+    $socialRows = [
+        ['label' => 'Facebook', 'url' => $v('social_facebook', '#')],
+        ['label' => 'Instagram', 'url' => $v('social_instagram', '#')],
+        ['label' => 'YouTube', 'url' => $v('social_youtube', '#')],
+        ['label' => 'TikTok', 'url' => $v('social_tiktok', '#')],
+    ];
+}
+while (count($socialRows) < 6) {
+    $socialRows[] = ['label' => '', 'url' => ''];
+}
+
+$logoPreview = $v('site_logo_path', '/images/logo.png');
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12" id="settingsAjaxFlash"></div>
+    <?php if (!empty($flashSuccess)): ?>
+      <div class="col-12"><div class="alert alert-success mb-0"><?= e((string) $flashSuccess) ?></div></div>
+    <?php endif; ?>
+    <?php if (!empty($flashError)): ?>
+      <div class="col-12"><div class="alert alert-danger mb-0"><?= e((string) $flashError) ?></div></div>
+    <?php endif; ?>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Configuration</h2>
+          <div class="sf-card-meta">Brand, appearance, contact, and security</div>
+        </div>
+        <div class="sf-card-body">
+          <form id="settingsAllForm" method="post" action="<?= e(base_url('/admin/settings/save')) ?>" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+
+            <ul class="nav nav-tabs nav-tabs-dark mb-3" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-site" data-bs-toggle="tab" data-bs-target="#pane-site" type="button" role="tab">Site</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-advanced" data-bs-toggle="tab" data-bs-target="#pane-advanced" type="button" role="tab">Appearance</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-security" data-bs-toggle="tab" data-bs-target="#pane-security" type="button" role="tab">Security</button>
+              </li>
+            </ul>
+
+            <div class="tab-content">
+              <div class="tab-pane fade show active" id="pane-site" role="tabpanel">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Website name</label>
+                    <input class="form-control" name="site_name" value="<?= e($v('site_name', 'APX')) ?>" required />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Logo path (manual)</label>
+                    <input class="form-control" name="site_logo_path" value="<?= e($v('site_logo_path', '/images/logo.png')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Upload logo</label>
+                    <input class="form-control" type="file" name="logo_file" accept="image/jpeg,image/png,image/webp,image/gif" />
+                    <div class="form-text text-white-50 small">Max ~2.5MB. Replaces the path above when uploaded.</div>
+                  </div>
+                  <div class="col-12 col-md-6 d-flex align-items-end">
+                    <div class="border border-secondary rounded p-2 bg-dark w-100 text-center">
+                      <div class="small text-white-50 mb-1">Preview</div>
+                      <img id="logoPreviewImg" src="<?= e(base_url(ltrim($logoPreview, '/'))) ?>" alt="Logo preview" style="max-height:64px;max-width:100%" />
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Contact email</label>
+                    <input type="email" class="form-control" name="contact_email" value="<?= e($v('contact_email', 'info@apx.com')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Phone (tel link)</label>
+                    <input class="form-control" name="contact_phone" value="<?= e($v('contact_phone', '+94770000000')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Phone (display)</label>
+                    <input class="form-control" name="contact_phone_label" value="<?= e($v('contact_phone_label', '+94 77 000 0000')) ?>" />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Address</label>
+                    <input class="form-control" name="contact_address" value="<?= e($v('contact_address', 'Colombo, Sri Lanka')) ?>" />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Footer tagline</label>
+                    <input class="form-control" name="footer_tagline" value="<?= e($v('footer_tagline', 'Your joyful journey is in our care')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Apply button label</label>
+                    <input class="form-control" name="nav_apply_label" value="<?= e($v('nav_apply_label', 'Apply Now')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Apply button URL</label>
+                    <input class="form-control" name="nav_apply_url" value="<?= e($v('nav_apply_url', '/#apply')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Contact button label</label>
+                    <input class="form-control" name="nav_contact_label" value="<?= e($v('nav_contact_label', 'Contact')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Contact button URL</label>
+                    <input class="form-control" name="nav_contact_url" value="<?= e($v('nav_contact_url', '/contact')) ?>" />
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Social links (repeatable)</label>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-dark align-middle mb-0">
+                        <thead><tr><th>Label</th><th>URL</th></tr></thead>
+                        <tbody id="socialRowsBody">
+                          <?php foreach ($socialRows as $sr): ?>
+                            <tr>
+                              <td><input class="form-control form-control-sm" name="social_label[]" value="<?= e($sr['label']) ?>" placeholder="Facebook" /></td>
+                              <td><input class="form-control form-control-sm" name="social_url[]" value="<?= e($sr['url']) ?>" placeholder="https://" /></td>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="form-text text-white-50 small">Empty rows are ignored. Public header/footer use these entries.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="pane-advanced" role="tabpanel">
+                <div class="row g-3">
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Primary color</label>
+                    <input class="form-control form-control-color w-100" name="theme_primary" value="<?= e($v('theme_primary', '#4f8cff')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Accent color</label>
+                    <input class="form-control form-control-color w-100" name="theme_accent" value="<?= e($v('theme_accent', '#ff7a18')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Default theme</label>
+                    <select class="form-select" name="default_theme">
+                      <?php $dt = $v('default_theme', 'light'); ?>
+                      <option value="light" <?= $dt === 'light' ? 'selected' : '' ?>>Light</option>
+                      <option value="dark" <?= $dt === 'dark' ? 'selected' : '' ?>>Dark</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Gradient from</label>
+                    <input class="form-control form-control-color w-100" name="theme_gradient_from" value="<?= e($v('theme_gradient_from', '#0f172a')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Gradient to</label>
+                    <input class="form-control form-control-color w-100" name="theme_gradient_to" value="<?= e($v('theme_gradient_to', '#1e293b')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Default language</label>
+                    <input class="form-control" name="default_locale" value="<?= e($v('default_locale', 'en')) ?>" maxlength="10" />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Timezone</label>
+                    <input class="form-control" name="app_timezone" value="<?= e($v('app_timezone', 'UTC')) ?>" placeholder="Asia/Colombo" />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label fw-bold">Currency format</label>
+                    <input class="form-control" name="currency_format" value="<?= e($v('currency_format', 'USD %s')) ?>" placeholder="USD %s" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="pane-security" role="tabpanel">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Max login attempts</label>
+                    <input class="form-control" type="number" min="1" max="50" name="login_max_attempts" value="<?= e($v('login_max_attempts', '5')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Lockout window (minutes)</label>
+                    <input class="form-control" type="number" min="1" max="1440" name="login_lockout_minutes" value="<?= e($v('login_lockout_minutes', '15')) ?>" />
+                  </div>
+                  <div class="col-12">
+                    <p class="text-white-50 small mb-2">Passwords are hashed with <code>password_hash</code>. All admin forms include CSRF tokens.</p>
+                    <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/forgot-password')) ?>"><i class="bi bi-envelope me-2"></i>Forgot password (email)</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2 justify-content-end">
+              <a class="btn btn-outline-light" href="<?= e(base_url('/admin')) ?>">Cancel</a>
+              <button class="btn btn-primary" type="submit"><i class="bi bi-save me-2"></i>Save configuration</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var form = document.getElementById('settingsAllForm');
+    var prev = document.getElementById('logoPreviewImg');
+    var fin = form ? form.querySelector('input[name="logo_file"]') : null;
+    if (fin && prev) {
+      fin.addEventListener('change', function(){
+        var f = fin.files && fin.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function(){ prev.src = r.result; };
+        r.readAsDataURL(f);
+      });
+    }
+  })();
+  </script>
+</template>

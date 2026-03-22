@@ -1,0 +1,24 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">BLOG</h1>
+    <p class="hero-sub js-reveal">Latest updates, offers, and travel tips.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-3">
+      <?php foreach (($posts ?? []) as $post): ?>
+        <div class="col-12 col-md-6 col-lg-4 js-reveal">
+          <div class="card h-100" style="border-radius:16px">
+            <div class="card-body">
+              <div class="fw-bold mb-1"><?= e((string) $post['title']) ?></div>
+              <div class="text-secondary small mb-2"><?= e((string) ($post['excerpt'] ?? '')) ?></div>
+              <a class="btn btn-sm btn-outline-primary" href="<?= e(base_url('/blog/' . $post['slug'])) ?>">Read more</a>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>

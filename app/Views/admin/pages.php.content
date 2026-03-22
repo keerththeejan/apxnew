@@ -1,0 +1,239 @@
+<?php
+
+$pages = $pages ?? [];
+$q = (string) ($q ?? '');
+$total = (int) ($total ?? 0);
+$page = (int) ($page ?? 1);
+$perPage = (int) ($perPage ?? 10);
+$pageCount = (int) ($pageCount ?? 1);
+$sort = (string) ($sort ?? 'updated_at');
+$dir = (string) ($dir ?? 'DESC');
+
+$flashErrors = $flashErrors ?? [];
+$flashOld = $flashOld ?? [];
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?>
+        <div class="alert alert-success mb-3"><?= e((string) $flashSuccess) ?></div>
+      <?php endif; ?>
+      <?php if (!empty($flashError)): ?>
+        <div class="alert alert-danger mb-3"><?= e((string) $flashError) ?></div>
+      <?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Pages</h2>
+          <div class="d-flex align-items-center gap-2">
+            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/pages')) ?>">
+              <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search by key/title/slug..." style="max-width:260px" />
+              <input type="hidden" name="sort" value="<?= e($sort) ?>" />
+              <input type="hidden" name="dir" value="<?= e($dir) ?>" />
+              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+              <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/pages')) ?>"><i class="bi bi-x"></i></a>
+            </form>
+            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#pageModal" data-mode="create"><i class="bi bi-plus-circle me-2"></i>New</button>
+          </div>
+        </div>
+
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>
+                    <a class="text-decoration-none text-white" href="<?= e(base_url('/admin/pages?q=' . urlencode($q) . '&sort=key&dir=' . ($sort === 'key' && $dir === 'ASC' ? 'DESC' : 'ASC'))) ?>">Key</a>
+                  </th>
+                  <th>
+                    <a class="text-decoration-none text-white" href="<?= e(base_url('/admin/pages?q=' . urlencode($q) . '&sort=title&dir=' . ($sort === 'title' && $dir === 'ASC' ? 'DESC' : 'ASC'))) ?>">Title</a>
+                  </th>
+                  <th class="d-none d-lg-table-cell">Slug</th>
+                  <th>Status</th>
+                  <th class="d-none d-lg-table-cell">
+                    <a class="text-decoration-none text-white" href="<?= e(base_url('/admin/pages?q=' . urlencode($q) . '&sort=updated_at&dir=' . ($sort === 'updated_at' && $dir === 'ASC' ? 'DESC' : 'ASC'))) ?>">Updated</a>
+                  </th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (empty($pages)): ?>
+                  <tr>
+                    <td colspan="6" class="text-white-50">No pages found.</td>
+                  </tr>
+                <?php endif; ?>
+
+                <?php foreach ($pages as $p): ?>
+                  <?php
+                    $pid = (int) ($p['id'] ?? 0);
+                    $pkey = (string) ($p['key'] ?? '');
+                    $ptitle = (string) ($p['title'] ?? '');
+                    $pslug = (string) ($p['slug'] ?? '');
+                    $pactive = (int) ($p['is_active'] ?? 1);
+                    $pupdated = (string) ($p['updated_at'] ?? '');
+                    $pcontent = (string) ($p['content'] ?? '');
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($pkey) ?></td>
+                    <td class="text-white-50"><?= e($ptitle) ?></td>
+                    <td class="text-white-50 d-none d-lg-table-cell"><?= e($pslug) ?></td>
+                    <td>
+                      <?php if ($pactive === 1): ?>
+                        <span class="badge text-bg-success">Active</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-secondary">Disabled</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-white-50 small d-none d-lg-table-cell"><?= e($pupdated) ?></td>
+                    <td class="text-end">
+                      <button
+                        class="btn btn-outline-light btn-sm"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#pageModal"
+                        data-mode="edit"
+                        data-id="<?= e((string) $pid) ?>"
+                        data-key="<?= e($pkey) ?>"
+                        data-title="<?= e($ptitle) ?>"
+                        data-slug="<?= e($pslug) ?>"
+                        data-content="<?= e($pcontent) ?>"
+                        data-active="<?= e((string) $pactive) ?>"
+                      ><i class="bi bi-pencil"></i></button>
+
+                      <form method="post" action="<?= e(base_url('/admin/pages/delete')) ?>" class="d-inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= e((string) $pid) ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" onclick="return confirm('Delete this page?')"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <div class="text-white-50 small">Total: <?= e((string) $total) ?> • Page <?= e((string) $page) ?> / <?= e((string) $pageCount) ?></div>
+            <nav aria-label="Pages pagination">
+              <ul class="pagination pagination-sm mb-0">
+                <?php
+                  $base = base_url('/admin/pages?q=' . urlencode($q) . '&sort=' . urlencode($sort) . '&dir=' . urlencode($dir) . '&perPage=' . $perPage . '&page=');
+                  $prev = max(1, $page - 1);
+                  $next = min($pageCount, $page + 1);
+                ?>
+                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= e($base . $prev) ?>">Prev</a></li>
+                <li class="page-item active"><a class="page-link" href="#"><?= e((string) $page) ?></a></li>
+                <li class="page-item <?= $page >= $pageCount ? 'disabled' : '' ?>"><a class="page-link" href="<?= e($base . $next) ?>">Next</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="pageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white" style="border:1px solid rgba(148,163,184,.18); border-radius:16px">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-layout-text-window-reverse me-2"></i><span id="pageModalTitle">New Page</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form method="post" id="pageForm" action="<?= e(base_url('/admin/pages/create')) ?>">
+          <div class="modal-body">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="pageId" value="" />
+
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-bold">Key</label>
+                <input class="form-control" name="key" id="pageKey" value="<?= e((string) ($flashOld['key'] ?? '')) ?>" required />
+                <?php if (!empty($flashErrors['key'][0])): ?><div class="text-danger small mt-1"><?= e((string) $flashErrors['key'][0]) ?></div><?php endif; ?>
+              </div>
+              <div class="col-12 col-md-8">
+                <label class="form-label fw-bold">Title</label>
+                <input class="form-control" name="title" id="pageTitle" value="<?= e((string) ($flashOld['title'] ?? '')) ?>" required />
+                <?php if (!empty($flashErrors['title'][0])): ?><div class="text-danger small mt-1"><?= e((string) $flashErrors['title'][0]) ?></div><?php endif; ?>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Slug (optional)</label>
+                <input class="form-control" name="slug" id="pageSlug" value="<?= e((string) ($flashOld['slug'] ?? '')) ?>" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Content</label>
+                <textarea class="form-control" rows="7" name="content" id="pageContent"><?= e((string) ($flashOld['content'] ?? '')) ?></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="pageActive" name="is_active" value="1" <?= ((int)($flashOld['is_active'] ?? 1) === 1) ? 'checked' : '' ?> />
+                  <label class="form-check-label fw-bold" for="pageActive">Active</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var modal = document.getElementById('pageModal');
+      if (!modal) return;
+
+      modal.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (!btn) return;
+
+        var mode = btn.getAttribute('data-mode') || 'create';
+        var form = document.getElementById('pageForm');
+        var title = document.getElementById('pageModalTitle');
+
+        var idEl = document.getElementById('pageId');
+        var keyEl = document.getElementById('pageKey');
+        var tEl = document.getElementById('pageTitle');
+        var slugEl = document.getElementById('pageSlug');
+        var cEl = document.getElementById('pageContent');
+        var aEl = document.getElementById('pageActive');
+
+        if (mode === 'edit') {
+          if (title) title.textContent = 'Edit Page';
+          if (form) form.action = '<?= e(base_url('/admin/pages/update')) ?>';
+
+          if (idEl) idEl.value = btn.getAttribute('data-id') || '';
+          if (keyEl) keyEl.value = btn.getAttribute('data-key') || '';
+          if (tEl) tEl.value = btn.getAttribute('data-title') || '';
+          if (slugEl) slugEl.value = btn.getAttribute('data-slug') || '';
+          if (cEl) cEl.value = btn.getAttribute('data-content') || '';
+          var active = btn.getAttribute('data-active') || '1';
+          if (aEl) aEl.checked = active === '1';
+        } else {
+          if (title) title.textContent = 'New Page';
+          if (form) form.action = '<?= e(base_url('/admin/pages/create')) ?>';
+
+          if (idEl) idEl.value = '';
+          if (keyEl) keyEl.value = '';
+          if (tEl) tEl.value = '';
+          if (slugEl) slugEl.value = '';
+          if (cEl) cEl.value = '';
+          if (aEl) aEl.checked = true;
+        }
+      });
+
+      // if validation errors exist (flash_old), auto-open modal
+      var hasOld = <?= !empty($flashOld) ? 'true' : 'false' ?>;
+      if (hasOld) {
+        var inst = bootstrap.Modal.getOrCreateInstance(modal);
+        inst.show();
+      }
+    })();
+  </script>
+</template>

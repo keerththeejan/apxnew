@@ -1,0 +1,27 @@
+<?php
+$page = $page ?? [];
+$settings = $settings ?? [];
+$heroTitle = strtoupper((string) ($page['title'] ?? 'About'));
+$subtitle = (string) ($settings['about_subtitle'] ?? 'We help you travel with confidence.');
+$body = trim((string) ($page['content'] ?? ''));
+if ($body === '') {
+    $body = (string) ($settings['about_text'] ?? 'We provide travel services including visas, flights, hotels, and insurance.');
+}
+?>
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
+    <p class="hero-sub js-reveal"><?= e($subtitle) ?></p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="card glass-card border-0" style="border-radius:18px">
+      <div class="card-body p-4">
+        <h2 class="fw-bold"><?= e((string) ($settings['site_name'] ?? 'APX')) ?></h2>
+        <div class="text-secondary mb-0 content-block"><?= nl2br(e($body)) ?></div>
+      </div>
+    </div>
+  </div>
+</section>

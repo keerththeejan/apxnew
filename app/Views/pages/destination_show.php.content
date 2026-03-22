@@ -1,0 +1,33 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal"><?= e((string) ($destination['name'] ?? 'Destination')) ?></h1>
+    <p class="hero-sub js-reveal"><?= e((string) ($destination['country'] ?? '')) ?></p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-12 col-lg-8 js-reveal">
+        <div class="card" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h2 class="fw-bold mb-2">Overview</h2>
+            <p class="text-secondary mb-0"><?= e((string) ($destination['description'] ?? '')) ?></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-4 js-reveal">
+        <div class="card shadow-sm" style="border-radius:18px">
+          <div class="card-body p-4">
+            <div class="fw-bold mb-2">Visa note</div>
+            <div class="text-secondary small"><?= e((string) ($destination['visa_note'] ?? 'Contact us for requirements.')) ?></div>
+
+            <hr />
+            <a class="btn btn-primary w-100" href="<?= e(base_url('/contact')) ?>">Contact for quote</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

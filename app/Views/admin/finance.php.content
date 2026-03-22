@@ -1,0 +1,181 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$q = (string) ($q ?? '');
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$schemaReady = (bool) ($schemaReady ?? true);
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?>
+        <div class="alert alert-warning mb-0">
+          The <code>finance_services</code> table is not created yet. From the project folder run: <code>php database/migrate.php up</code>
+          (WAMP: open a terminal in <code>c:\wamp64\www\apx</code> and use the full path to <code>php.exe</code> under <code>C:\wamp64\bin\php\…</code>),
+          or run the <code>CREATE TABLE finance_services</code> block from <code>database/schema.sql</code> in phpMyAdmin.
+        </div>
+      <?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12 col-xl-5">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Add Finance Service</h2>
+          <div class="sf-card-meta">Flexible travel finance offerings</div>
+        </div>
+        <div class="sf-card-body">
+          <form method="post" action="<?= e(base_url('/admin/finance/create')) ?>">
+            <?= csrf_field() ?>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Title</label>
+              <input class="form-control" name="title" placeholder="Installment Plan" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Description</label>
+              <textarea class="form-control" name="description" rows="4" placeholder="Service description"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Status</label>
+              <select class="form-select" name="status">
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Sort order</label>
+              <input class="form-control" type="number" name="sort_order" value="0" />
+            </div>
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-save me-2"></i>Save Service</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-7">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Finance Services</h2>
+          <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/finance')) ?>">
+              <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search services..." style="max-width:240px" />
+              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+            </form>
+          </div>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($items === []): ?>
+                  <tr><td colspan="3" class="text-white-50">No finance services yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($items as $row): ?>
+                  <?php
+                    $id = (int) ($row['id'] ?? 0);
+                    $title = (string) ($row['title'] ?? '');
+                    $desc = (string) ($row['description'] ?? '');
+                    $st = (string) ($row['status'] ?? 'draft');
+                    $sort = (int) ($row['sort_order'] ?? 0);
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($title) ?></td>
+                    <td>
+                      <?php if ($st === 'active'): ?>
+                        <span class="badge text-bg-success">Active</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-warning">Draft</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#finModal" data-mode="edit"
+                        data-id="<?= e((string) $id) ?>" data-title="<?= e($title) ?>" data-description="<?= e($desc) ?>" data-status="<?= e($st) ?>" data-sort="<?= e((string) $sort) ?>"
+                        aria-label="Edit"><i class="bi bi-pencil"></i></button>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/finance/delete')) ?>" onsubmit="return confirm('Delete this finance service?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) $id ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" aria-label="Delete"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if ($pageCount > 1): ?>
+            <nav class="mt-3">
+              <ul class="pagination pagination-sm mb-0">
+                <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                  <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                    <a class="page-link" href="<?= e(base_url('/admin/finance?q=' . urlencode($q) . '&page=' . $p)) ?>"><?= $p ?></a>
+                  </li>
+                <?php endfor; ?>
+              </ul>
+            </nav>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="finModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Finance service</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="<?= e(base_url('/admin/finance/create')) ?>" id="finForm">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="fin_id" value="" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-12"><label class="form-label">Title</label><input class="form-control" name="title" id="fin_title" required /></div>
+              <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" id="fin_desc" rows="4"></textarea></div>
+              <div class="col-md-6"><label class="form-label">Status</label><select class="form-select" name="status" id="fin_status"><option value="draft">Draft</option><option value="active">Active</option></select></div>
+              <div class="col-md-6"><label class="form-label">Sort order</label><input class="form-control" type="number" name="sort_order" id="fin_sort" value="0" /></div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('finModal');
+    var form = document.getElementById('finForm');
+    if (!modal || !form) return;
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      form.reset();
+      document.getElementById('fin_id').value = '';
+      form.action = '<?= e(base_url('/admin/finance/create')) ?>';
+      if (btn && btn.getAttribute('data-mode') === 'edit') {
+        document.getElementById('fin_id').value = btn.getAttribute('data-id') || '';
+        document.getElementById('fin_title').value = btn.getAttribute('data-title') || '';
+        document.getElementById('fin_desc').value = btn.getAttribute('data-description') || '';
+        document.getElementById('fin_status').value = btn.getAttribute('data-status') || 'draft';
+        document.getElementById('fin_sort').value = btn.getAttribute('data-sort') || '0';
+        form.action = '<?= e(base_url('/admin/finance/update')) ?>';
+      }
+    });
+  })();
+  </script>
+</template>

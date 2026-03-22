@@ -1,0 +1,222 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$menuTree = $menuTree ?? [];
+$itemsById = $itemsById ?? [];
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$flashErrors = $flashErrors ?? [];
+
+if (!function_exists('apx_nav_admin_render_node')) {
+    /**
+     * @param array<string, mixed> $row
+     * @param array<int, array<string, mixed>> $itemsById
+     */
+    function apx_nav_admin_render_node(array $row, array $itemsById): void
+    {
+        $id = (int) ($row['id'] ?? 0);
+        if ($id < 1) {
+            return;
+        }
+        $label = (string) ($row['label'] ?? '');
+        $url = (string) ($row['url'] ?? '');
+        $slug = (string) ($row['slug'] ?? '');
+        $icon = (string) ($row['icon'] ?? '');
+        $pid = $row['parent_id'] ?? null;
+        $parentId = ($pid === null || (int) $pid === 0) ? '' : (string) (int) $pid;
+        $sort = (int) ($row['order_index'] ?? $row['sort_order'] ?? 0);
+        $active = (int) ($row['is_active'] ?? 1);
+        $tab = (int) ($row['open_new_tab'] ?? 0);
+        $isBtn = (int) ($row['is_button'] ?? 0);
+        $children = $row['children'] ?? [];
+        if (!is_array($children)) {
+            $children = [];
+        }
+        ?>
+        <li class="nav-sortable-li mb-2" data-id="<?= (int) $id ?>">
+          <div class="d-flex flex-wrap align-items-center gap-2 rounded border border-secondary nav-sortable-row px-2 py-2">
+            <span class="nav-drag-handle text-info user-select-none flex-shrink-0" title="Drag to reorder" role="button" tabindex="0" aria-grabbed="false">
+              <i class="bi bi-grip-vertical fs-5"></i>
+            </span>
+            <div class="flex-grow-1 min-width-0" style="min-width:120px">
+              <div class="fw-bold text-truncate text-white"><?= e($label) ?></div>
+              <div class="small text-white-50 text-truncate d-none d-md-block"><?= e($url) ?></div>
+            </div>
+            <span class="badge bg-secondary d-none d-sm-inline">#<?= (int) $sort ?></span>
+            <span class="badge <?= $active === 1 ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= $active === 1 ? 'On' : 'Off' ?></span>
+            <span class="badge <?= $isBtn === 1 ? 'text-bg-warning text-dark' : 'text-bg-dark border border-secondary' ?>"><?= $isBtn === 1 ? 'CTA' : 'Link' ?></span>
+            <div class="ms-auto d-flex flex-wrap gap-1 justify-content-end">
+              <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#navModal" data-mode="edit"
+                data-id="<?= e((string) $id) ?>"
+                data-label="<?= e($label) ?>"
+                data-url="<?= e($url) ?>"
+                data-slug="<?= e($slug) ?>"
+                data-icon="<?= e($icon) ?>"
+                data-parent-id="<?= e($parentId) ?>"
+                data-sort="<?= e((string) $sort) ?>"
+                data-active="<?= e((string) $active) ?>"
+                data-tab="<?= e((string) $tab) ?>"
+                data-button="<?= e((string) $isBtn) ?>"
+              >Edit</button>
+              <form class="d-inline" method="post" action="<?= e(base_url('/admin/navigation/delete')) ?>" onsubmit="return confirm('Delete this menu item?');">
+                <?= csrf_field() ?>
+                <input type="hidden" name="id" value="<?= (int) $id ?>" />
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+          <ul class="nav-nested-sortable list-unstyled ms-0 ms-md-3 mt-2 ps-0 ps-md-3 border-start border-secondary border-opacity-50" style="min-height:12px">
+            <?php foreach ($children as $ch): ?>
+              <?php apx_nav_admin_render_node($ch, $itemsById); ?>
+            <?php endforeach; ?>
+          </ul>
+        </li>
+        <?php
+    }
+}
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+      <?php if (!empty($flashErrors)): ?>
+        <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($flashErrors as $er): ?><li><?= e((string) $er) ?></li><?php endforeach; ?></ul></div>
+      <?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+              <h2 class="sf-card-title mb-0">Main menu</h2>
+              <p class="text-white-50 small mb-0 mt-1">Drag items to reorder. Drop on indented zones for dropdown children. Order saves automatically.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span id="navOrderStatus" class="small text-white-50" aria-live="polite"></span>
+              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#navModal" data-mode="create"><i class="bi bi-plus-lg me-1"></i>New item</button>
+            </div>
+          </div>
+        </div>
+        <div class="sf-card-body">
+          <?php if ($menuTree === []): ?>
+            <p class="text-white-50 mb-0">No menu items yet.</p>
+          <?php else: ?>
+            <ul id="navTreeRoot"
+                class="nav-nested-root nav-nested-sortable list-unstyled mb-0"
+                data-csrf="<?= e(\App\Core\Csrf::token()) ?>"
+                data-reorder-url="<?= e(base_url('/admin/navigation/reorder-ajax')) ?>">
+              <?php foreach ($menuTree as $root): ?>
+                <?php apx_nav_admin_render_node($root, $itemsById); ?>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="navModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Menu item</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="<?= e(base_url('/admin/navigation/create')) ?>" id="navForm">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="nav_id" value="" autocomplete="off" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-md-8"><label class="form-label">Title</label><input class="form-control" name="label" id="nav_label" required maxlength="120" /></div>
+              <div class="col-md-4"><label class="form-label">Order index</label><input class="form-control" type="number" name="order_index" id="nav_sort" value="0" /></div>
+              <div class="col-12"><label class="form-label">URL / path</label><input class="form-control" name="url" id="nav_url" required placeholder="/about or https://…" /></div>
+              <div class="col-md-6"><label class="form-label">Slug (optional)</label><input class="form-control" name="slug" id="nav_slug" maxlength="190" placeholder="for future use" /></div>
+              <div class="col-md-6"><label class="form-label">Icon (optional)</label><input class="form-control" name="icon" id="nav_icon" placeholder="bi-house or emoji" maxlength="80" /></div>
+              <div class="col-12"><label class="form-label">Parent</label>
+                <select class="form-select" name="parent_id" id="nav_parent">
+                  <option value="">— Top level —</option>
+                  <?php foreach ($items as $opt): ?>
+                    <?php $oid = (int) ($opt['id'] ?? 0); ?>
+                    <?php if ($oid < 1) { continue; } ?>
+                    <?php
+                      $opp = $opt['parent_id'] ?? null;
+                      if ($opp !== null && (int) $opp > 0) {
+                          continue;
+                      }
+                    ?>
+                    <option value="<?= (int) $oid ?>"><?= e((string) ($opt['label'] ?? '')) ?></option>
+                  <?php endforeach; ?>
+                </select>
+                <div class="form-text text-white-50">Dropdowns: choose a top-level parent. CTA buttons must stay top-level.</div>
+              </div>
+              <div class="col-md-4"><label class="form-label">Active</label><select class="form-select" name="is_active" id="nav_active"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="col-md-4"><label class="form-label">New tab</label><select class="form-select" name="open_new_tab" id="nav_tab"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="col-md-4"><label class="form-label">CTA button</label><select class="form-select" name="is_button" id="nav_button"><option value="0">No</option><option value="1">Yes</option></select></div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('navModal');
+    var navForm = document.getElementById('navForm');
+    if (!modal || !navForm) return;
+    var parentSel = document.getElementById('nav_parent');
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      var mode = btn && btn.getAttribute('data-mode') === 'edit' ? 'edit' : 'create';
+      navForm.reset();
+      document.getElementById('nav_id').value = '';
+      navForm.action = mode === 'edit' ? '<?= e(base_url('/admin/navigation/update')) ?>' : '<?= e(base_url('/admin/navigation/create')) ?>';
+      if (parentSel) parentSel.disabled = false;
+      if (mode === 'edit' && btn) {
+        var editId = btn.getAttribute('data-id') || '';
+        document.getElementById('nav_id').value = editId;
+        document.getElementById('nav_label').value = btn.getAttribute('data-label') || '';
+        document.getElementById('nav_url').value = btn.getAttribute('data-url') || '';
+        document.getElementById('nav_slug').value = btn.getAttribute('data-slug') || '';
+        document.getElementById('nav_icon').value = btn.getAttribute('data-icon') || '';
+        document.getElementById('nav_sort').value = btn.getAttribute('data-sort') || '0';
+        document.getElementById('nav_active').value = btn.getAttribute('data-active') || '1';
+        document.getElementById('nav_tab').value = btn.getAttribute('data-tab') || '0';
+        document.getElementById('nav_button').value = btn.getAttribute('data-button') || '0';
+        var p = btn.getAttribute('data-parent-id') || '';
+        if (parentSel) {
+          parentSel.value = p;
+          Array.prototype.forEach.call(parentSel.options, function(opt){
+            if (opt.value && String(opt.value) === String(editId)) {
+              opt.disabled = true;
+            } else {
+              opt.disabled = false;
+            }
+          });
+        }
+      } else if (parentSel) {
+        Array.prototype.forEach.call(parentSel.options, function(opt){ opt.disabled = false; });
+      }
+    });
+    var btnField = document.getElementById('nav_button');
+    function syncButtonParent(){
+      if (!parentSel || !btnField) return;
+      if (btnField.value === '1') {
+        parentSel.value = '';
+        parentSel.disabled = true;
+      } else {
+        parentSel.disabled = false;
+      }
+    }
+    if (btnField) {
+      btnField.addEventListener('change', syncButtonParent);
+    }
+    modal.addEventListener('shown.bs.modal', syncButtonParent);
+  })();
+  </script>
+</template>

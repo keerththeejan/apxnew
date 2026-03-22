@@ -1,0 +1,96 @@
+admin@example.com
+
+
+admin123
+
+You are a senior full‑stack engineer. Generate a COMPLETE, production‑ready, fully dynamic website with an Admin Panel CMS using PHP 8+ and MySQL (PDO). Use an MVC structure and RESTful APIs.
+
+# Core Features (must-have)
+1) Admin Authentication
+- Secure login/logout
+- Password hashing using password_hash() + password_verify()
+- Session-based auth with secure cookie settings
+- CSRF protection on all state-changing requests (forms + API)
+- Rate limit login attempts (basic IP/session throttle)
+- Auth middleware for all /admin and /api/admin routes
+
+2) Dynamic Content Management (CRUD)
+Admin can create/update/delete:
+- Pages (title, slug, SEO meta, status, publish date)
+- Sections (page_id, type, sort_order, visibility)
+- Content blocks (text, rich text, image, gallery, video embed, CTA, FAQ)
+- Media library (images/videos/files) with upload + storage path + alt text
+- Menus/navigation (optional but preferred)
+
+3) Dynamic Frontend Rendering
+- Public site routes render pages by slug from DB
+- Page builder style: each page loads its ordered sections/blocks dynamically
+- Clean, responsive UI (mobile-first)
+- Semantic HTML + accessibility (labels, focus states, skip links)
+- Consistent typography and card-based components
+
+4) Admin Dashboard
+- Summary cards: total pages, total sections, total media, total users/admins
+- Recent activity feed: latest edits/creates/deletes
+- Tables must be mobile-friendly (stacked rows or horizontal scroll)
+- Search/filter for pages and content
+
+5) REST API (JSON)
+Implement REST endpoints (examples; add more as needed):
+- POST   /api/admin/auth/login
+- POST   /api/admin/auth/logout
+- GET    /api/admin/dashboard
+- GET    /api/admin/pages
+- POST   /api/admin/pages
+- GET    /api/admin/pages/{id}
+- PUT    /api/admin/pages/{id}
+- DELETE /api/admin/pages/{id}
+- GET/POST/PUT/DELETE for sections and blocks
+- POST   /api/admin/media (multipart upload)
+- GET    /api/admin/media
+All responses must be JSON with consistent error format, HTTP status codes, and validation errors.
+
+# Database Requirements
+Provide a MySQL schema + seed data. Include at minimum:
+- admins (id, name, email unique, password_hash, role, is_active, last_login_at, timestamps)
+- pages (id, title, slug unique, meta_title, meta_description, status, published_at, timestamps)
+- sections (id, page_id, type, sort_order, is_active, settings_json, timestamps)
+- blocks (id, section_id, type, sort_order, content_json, timestamps)
+- media (id, file_path, mime_type, size, alt_text, title, uploaded_by_admin_id, timestamps)
+- audit_logs (id, admin_id, entity_type, entity_id, action, diff_json, ip, user_agent, created_at)
+
+# Admin UI Requirements
+- Modern responsive layout using CSS Grid/Flexbox
+- Reusable components: sidebar/topbar, cards, table, modal/dialog, toast alerts
+- Theme support (light/dark via CSS variables)
+- Subtle animations (respect prefers-reduced-motion)
+- Clear empty states and loading states
+
+# Security Requirements
+- Input validation + output escaping
+- Prepared statements everywhere
+- File upload validation (size/mime/extension), random filenames, prevent executing uploads
+- Store uploads outside public when possible OR protect with .htaccess rules
+- Prevent XSS in rich text (sanitize allowlist OR store as plain text)
+- Proper authorization checks for each action
+
+# Optional (nice-to-have)
+- Role-based permissions (super_admin/editor)
+- Real-time updates for dashboard/activity (SSE or polling)
+- Content versioning + rollback
+- Slug auto-generation + uniqueness enforcement
+
+# Deliverables
+- Full project folder structure and code
+- README with setup steps for WAMP/XAMPP
+- .env example
+- SQL schema + seed
+- Example admin credentials
+- Instructions to run migrations/seeds
+- Ensure the site runs on http://localhost/<project>/ and admin at /admin/login
+
+# Coding Rules
+- No pseudo-code; generate actual runnable code
+- Keep controllers thin, move logic into services/repositories
+- Use PDO, strict_types, and consistent error handling
+- Provide basic unit/integration tests if feasible (optional)

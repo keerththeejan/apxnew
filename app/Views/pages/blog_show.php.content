@@ -1,0 +1,21 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal"><?= e((string) ($post['title'] ?? 'Blog post')) ?></h1>
+    <p class="hero-sub js-reveal"><?= e((string) ($post['excerpt'] ?? '')) ?></p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="card" style="border-radius:18px">
+      <div class="card-body p-4">
+        <div class="text-secondary small mb-3"><?= e((string) ($post['published_at'] ?? '')) ?></div>
+        <div class="text-secondary" style="white-space:pre-wrap"><?= e((string) ($post['content'] ?? '')) ?></div>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a class="btn btn-outline-secondary" href="<?= e(base_url('/blog')) ?>">Back to blog</a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+$users = $users ?? [];
+$q = (string) ($q ?? '');
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Users</h2>
+          <div class="d-flex gap-2">
+            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/users')) ?>">
+              <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search..." style="max-width:220px" />
+              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+            </form>
+            <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/users/export?q=' . urlencode($q))) ?>"><i class="bi bi-download me-1"></i>CSV</a>
+          </div>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th class="text-end">Actions</th></tr>
+              </thead>
+              <tbody>
+                <?php if ($users === []): ?>
+                  <tr><td colspan="6" class="text-white-50">No users.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($users as $u): ?>
+                  <?php
+                    $id = (int) ($u['id'] ?? 0);
+                    $role = (string) ($u['role'] ?? 'user');
+                    $active = (int) ($u['is_active'] ?? 1);
+                  ?>
+                  <tr>
+                    <td><?= $id ?></td>
+                    <td><?= e((string) ($u['name'] ?? '')) ?></td>
+                    <td class="small"><?= e((string) ($u['email'] ?? '')) ?></td>
+                    <td>
+                      <form method="post" action="<?= e(base_url('/admin/users/role')) ?>" class="d-flex gap-1">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $id ?>" />
+                        <select class="form-select form-select-sm" name="role">
+                          <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>user</option>
+                          <option value="staff" <?= $role === 'staff' ? 'selected' : '' ?>>staff</option>
+                          <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>admin</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-light" type="submit">Set</button>
+                      </form>
+                    </td>
+                    <td><?= $active === 1 ? '<span class="badge text-bg-success">Yes</span>' : '<span class="badge text-bg-secondary">No</span>' ?></td>
+                    <td class="text-end">
+                      <form method="post" action="<?= e(base_url('/admin/users/toggle')) ?>" class="d-inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $id ?>" />
+                        <input type="hidden" name="is_active" value="<?= $active === 1 ? '0' : '1' ?>" />
+                        <button class="btn btn-sm btn-outline-warning" type="submit"><?= $active === 1 ? 'Deactivate' : 'Activate' ?></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if ($pageCount > 1): ?>
+            <nav class="mt-3"><ul class="pagination pagination-sm mb-0">
+              <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                  <a class="page-link" href="<?= e(base_url('/admin/users?q=' . urlencode($q) . '&page=' . $p)) ?>"><?= $p ?></a>
+                </li>
+              <?php endfor; ?>
+            </ul></nav>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

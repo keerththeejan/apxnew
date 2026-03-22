@@ -1,0 +1,71 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">INSURANCE</h1>
+    <p class="hero-sub js-reveal">Travel insurance for a safer journey.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-12 col-lg-7 js-reveal">
+        <div class="card" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h2 class="fw-bold">Insurance packages</h2>
+            <p class="text-secondary">Choose a plan and submit your request. Payment integration can be added later (Stripe/PayPal ready).</p>
+
+            <div class="row g-3">
+              <?php foreach (($packages ?? []) as $p): ?>
+                <div class="col-12 col-md-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="fw-bold"><?= e((string) $p['name']) ?></div>
+                    <div class="text-secondary small"><?= e((string) ($p['summary'] ?? '')) ?></div>
+                    <?php if (!empty($p['price_from'])): ?>
+                      <div class="mt-2"><span class="badge text-bg-primary">From <?= e((string) $p['price_from']) ?></span></div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-5 js-reveal">
+        <div class="card shadow-sm" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h3 class="fw-bold">Buy insurance</h3>
+            <form method="post" action="<?= e(base_url('/bookings/insurance')) ?>">
+              <?= csrf_field() ?>
+              <div class="mb-2">
+                <label class="form-label">Full name *</label>
+                <input class="form-control" name="full_name" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Phone *</label>
+                <input class="form-control" name="phone" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Email</label>
+                <input class="form-control" name="email" type="email" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Destination</label>
+                <input class="form-control" name="destination" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Travel date</label>
+                <input class="form-control" name="travel_date" type="date" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" name="notes" rows="3"></textarea>
+              </div>
+              <button class="btn btn-primary w-100" type="submit">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

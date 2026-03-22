@@ -1,0 +1,192 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$q = (string) ($q ?? '');
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12 col-xl-5">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Add Insurance Plan</h2>
+          <div class="sf-card-meta">Coverage &amp; pricing</div>
+        </div>
+        <div class="sf-card-body">
+          <form method="post" action="<?= e(base_url('/admin/insurance/create')) ?>">
+            <?= csrf_field() ?>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Plan name</label>
+              <input class="form-control" name="name" placeholder="Premium Cover" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Summary</label>
+              <input class="form-control" name="summary" placeholder="Short line for listings" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Coverage details</label>
+              <textarea class="form-control" name="coverage_text" rows="3" placeholder="What this plan includes…"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Price from</label>
+              <input class="form-control" name="price_from" placeholder="$39" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Sort order</label>
+              <input class="form-control" type="number" name="sort_order" value="0" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Status</label>
+              <select class="form-select" name="is_active">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-save me-2"></i>Save Plan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-7">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Plans</h2>
+          <form class="d-flex gap-2 flex-wrap justify-content-end" method="get" action="<?= e(base_url('/admin/insurance')) ?>">
+            <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search plans…" style="max-width:240px" />
+            <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+          </form>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($items === []): ?>
+                  <tr><td colspan="4" class="text-white-50">No plans yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($items as $row): ?>
+                  <?php
+                    $id = (int) ($row['id'] ?? 0);
+                    $name = (string) ($row['name'] ?? '');
+                    $sum = (string) ($row['summary'] ?? '');
+                    $cov = (string) ($row['coverage_text'] ?? '');
+                    $covAttr = str_replace(["\r", "\n", "\t"], ' ', $cov);
+                    $price = (string) ($row['price_from'] ?? '');
+                    $sort = (int) ($row['sort_order'] ?? 0);
+                    $active = (int) ($row['is_active'] ?? 1);
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($name) ?></td>
+                    <td class="text-white-50"><?= $price !== '' ? e($price) : '—' ?></td>
+                    <td>
+                      <?= $active === 1
+                        ? '<span class="badge text-bg-success">Active</span>'
+                        : '<span class="badge text-bg-warning">Inactive</span>' ?>
+                    </td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#insModal" data-mode="edit"
+                        data-id="<?= e((string) $id) ?>"
+                        data-name="<?= e($name) ?>"
+                        data-summary="<?= e($sum) ?>"
+                        data-coverage="<?= e($covAttr) ?>"
+                        data-price="<?= e($price) ?>"
+                        data-sort="<?= e((string) $sort) ?>"
+                        data-active="<?= e((string) $active) ?>"
+                      ><i class="bi bi-pencil"></i></button>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/insurance/delete')) ?>" onsubmit="return confirm('Delete this plan?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $id ?>" />
+                        <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if ($pageCount > 1): ?>
+            <nav class="mt-3">
+              <ul class="pagination pagination-sm mb-0">
+                <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                  <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                    <a class="page-link" href="<?= e(base_url('/admin/insurance?q=' . urlencode($q) . '&page=' . $p)) ?>"><?= $p ?></a>
+                  </li>
+                <?php endfor; ?>
+              </ul>
+            </nav>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="insModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Edit plan</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="<?= e(base_url('/admin/insurance/update')) ?>">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="ins_id" value="" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-12"><label class="form-label">Plan name</label><input class="form-control" name="name" id="ins_name" required /></div>
+              <div class="col-12"><label class="form-label">Summary</label><input class="form-control" name="summary" id="ins_summary" /></div>
+              <div class="col-12"><label class="form-label">Coverage details</label><textarea class="form-control" name="coverage_text" id="ins_cov" rows="3"></textarea></div>
+              <div class="col-md-6"><label class="form-label">Price from</label><input class="form-control" name="price_from" id="ins_price" /></div>
+              <div class="col-md-6"><label class="form-label">Sort order</label><input class="form-control" type="number" name="sort_order" id="ins_sort" value="0" /></div>
+              <div class="col-12">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="is_active" id="ins_active">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('insModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      if (!btn || btn.getAttribute('data-mode') !== 'edit') return;
+      document.getElementById('ins_id').value = btn.getAttribute('data-id') || '';
+      document.getElementById('ins_name').value = btn.getAttribute('data-name') || '';
+      document.getElementById('ins_summary').value = btn.getAttribute('data-summary') || '';
+      document.getElementById('ins_cov').value = btn.getAttribute('data-coverage') || '';
+      document.getElementById('ins_price').value = btn.getAttribute('data-price') || '';
+      document.getElementById('ins_sort').value = btn.getAttribute('data-sort') || '0';
+      document.getElementById('ins_active').value = btn.getAttribute('data-active') || '1';
+    });
+  })();
+  </script>
+</template>

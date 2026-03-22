@@ -1,0 +1,64 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">CONTACT</h1>
+    <p class="hero-sub js-reveal">Reach out for quotes, questions, and support.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 js-reveal">
+        <div class="card shadow-sm" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h2 class="fw-bold mb-1">Send a message</h2>
+            <p class="text-secondary mb-3">We’ll get back to you shortly.</p>
+
+            <form method="post" action="<?= e(base_url('/contact-messages')) ?>" class="needs-validation" novalidate>
+              <?= csrf_field() ?>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Name *</label>
+                  <input name="name" class="form-control" required value="<?= e((string)($flashOld['name'] ?? '')) ?>" />
+                  <div class="invalid-feedback">Please enter your name.</div>
+                  <?php if (!empty($flashErrors['name'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['name'][0]) ?></div><?php endif; ?>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Phone *</label>
+                  <input name="phone" class="form-control" required value="<?= e((string)($flashOld['phone'] ?? '')) ?>" />
+                  <div class="invalid-feedback">Please enter your phone.</div>
+                  <?php if (!empty($flashErrors['phone'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['phone'][0]) ?></div><?php endif; ?>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Email</label>
+                  <input name="email" class="form-control" type="email" value="<?= e((string)($flashOld['email'] ?? '')) ?>" />
+                  <?php if (!empty($flashErrors['email'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['email'][0]) ?></div><?php endif; ?>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Subject</label>
+                  <input name="subject" class="form-control" value="<?= e((string)($flashOld['subject'] ?? '')) ?>" />
+                  <?php if (!empty($flashErrors['subject'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['subject'][0]) ?></div><?php endif; ?>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Message *</label>
+                  <textarea name="message" class="form-control" rows="4" required><?= e((string)($flashOld['message'] ?? '')) ?></textarea>
+                  <div class="invalid-feedback">Please enter a message.</div>
+                  <?php if (!empty($flashErrors['message'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['message'][0]) ?></div><?php endif; ?>
+                </div>
+                <div class="col-12 d-flex gap-2">
+                  <button class="btn btn-primary px-4" type="submit">Send</button>
+                  <button class="btn btn-outline-secondary" type="reset">Reset</button>
+                </div>
+              </div>
+            </form>
+
+            <div class="mt-4">
+              <div class="text-secondary small">Or WhatsApp us</div>
+              <a class="btn btn-success mt-2" href="https://wa.me/<?= e($settings['whatsapp_number'] ?? '94770000000') ?>" target="_blank" rel="noopener">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

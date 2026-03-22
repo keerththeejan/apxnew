@@ -1,0 +1,29 @@
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        <div class="card" style="border-radius:18px">
+          <div class="card-body p-4">
+            <h1 class="h3 fw-bold mb-1">Booking received</h1>
+            <p class="text-secondary mb-3">We’ll contact you shortly with the next steps.</p>
+
+            <div class="border rounded-3 p-3">
+              <div class="row g-2">
+                <div class="col-12 col-md-6"><div class="text-secondary small">Reference</div><div class="fw-bold"><?= e((string) ($booking['code'] ?? '')) ?></div></div>
+                <div class="col-12 col-md-6"><div class="text-secondary small">Type</div><div class="fw-bold"><?= e((string) ($booking['type'] ?? '')) ?></div></div>
+                <div class="col-12 col-md-6"><div class="text-secondary small">Name</div><div class="fw-bold"><?= e((string) ($booking['full_name'] ?? '')) ?></div></div>
+                <div class="col-12 col-md-6"><div class="text-secondary small">Phone</div><div class="fw-bold"><?= e((string) ($booking['phone'] ?? '')) ?></div></div>
+                <div class="col-12"><div class="text-secondary small">Destination</div><div class="fw-bold"><?= e((string) ($booking['destination'] ?? '')) ?></div></div>
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <a class="btn btn-primary" href="<?= e(base_url('/')) ?>">Back to home</a>
+              <a class="btn btn-outline-secondary" href="<?= e(base_url('/contact')) ?>">Contact</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

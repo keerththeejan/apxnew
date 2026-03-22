@@ -1,0 +1,257 @@
+<?php
+
+$flights = $flights ?? [];
+$q = (string) ($q ?? '');
+$total = (int) ($total ?? 0);
+$page = (int) ($page ?? 1);
+$perPage = (int) ($perPage ?? 10);
+$pageCount = (int) ($pageCount ?? 1);
+$sort = (string) ($sort ?? 'updated_at');
+$dir = (string) ($dir ?? 'DESC');
+
+$flashErrors = $flashErrors ?? [];
+$flashOld = $flashOld ?? [];
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?>
+        <div class="alert alert-success mb-3"><?= e((string) $flashSuccess) ?></div>
+      <?php endif; ?>
+      <?php if (!empty($flashError)): ?>
+        <div class="alert alert-danger mb-3"><?= e((string) $flashError) ?></div>
+      <?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Flights</h2>
+          <div class="d-flex align-items-center gap-2">
+            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/flights')) ?>">
+              <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search title/origin/destination..." style="max-width:260px" />
+              <input type="hidden" name="sort" value="<?= e($sort) ?>" />
+              <input type="hidden" name="dir" value="<?= e($dir) ?>" />
+              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+              <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/flights')) ?>"><i class="bi bi-x"></i></a>
+            </form>
+            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#flightModal" data-mode="create"><i class="bi bi-plus-circle me-2"></i>New</button>
+          </div>
+        </div>
+
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>
+                    <a class="text-decoration-none text-white" href="<?= e(base_url('/admin/flights?q=' . urlencode($q) . '&sort=title&dir=' . ($sort === 'title' && $dir === 'ASC' ? 'DESC' : 'ASC'))) ?>">Title</a>
+                  </th>
+                  <th class="d-none d-lg-table-cell">Route</th>
+                  <th class="d-none d-lg-table-cell">Price</th>
+                  <th>Deal</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (empty($flights)): ?>
+                  <tr>
+                    <td colspan="6" class="text-white-50">No flights found.</td>
+                  </tr>
+                <?php endif; ?>
+
+                <?php foreach ($flights as $f): ?>
+                  <?php
+                    $id = (int) ($f['id'] ?? 0);
+                    $title = (string) ($f['title'] ?? '');
+                    $summary = (string) ($f['summary'] ?? '');
+                    $origin = (string) ($f['origin'] ?? '');
+                    $dest = (string) ($f['destination'] ?? '');
+                    $price = (string) ($f['price_from'] ?? '');
+                    $isDeal = (int) ($f['is_deal'] ?? 0);
+                    $isActive = (int) ($f['is_active'] ?? 1);
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($title) ?></td>
+                    <td class="text-white-50 d-none d-lg-table-cell"><?= e($origin) ?> → <?= e($dest) ?></td>
+                    <td class="text-white-50 d-none d-lg-table-cell"><?= e($price) ?></td>
+                    <td>
+                      <?php if ($isDeal === 1): ?>
+                        <span class="badge text-bg-warning">Deal</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-secondary">No</span>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <?php if ($isActive === 1): ?>
+                        <span class="badge text-bg-success">Active</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-secondary">Disabled</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-end">
+                      <button
+                        class="btn btn-outline-light btn-sm"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#flightModal"
+                        data-mode="edit"
+                        data-id="<?= e((string) $id) ?>"
+                        data-title="<?= e($title) ?>"
+                        data-summary="<?= e($summary) ?>"
+                        data-origin="<?= e($origin) ?>"
+                        data-destination="<?= e($dest) ?>"
+                        data-price_from="<?= e($price) ?>"
+                        data-is_deal="<?= e((string) $isDeal) ?>"
+                        data-is_active="<?= e((string) $isActive) ?>"
+                      ><i class="bi bi-pencil"></i></button>
+
+                      <form method="post" action="<?= e(base_url('/admin/flights/delete')) ?>" class="d-inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= e((string) $id) ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" onclick="return confirm('Delete this flight?')"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <div class="text-white-50 small">Total: <?= e((string) $total) ?> • Page <?= e((string) $page) ?> / <?= e((string) $pageCount) ?></div>
+            <nav aria-label="Flights pagination">
+              <ul class="pagination pagination-sm mb-0">
+                <?php
+                  $base = base_url('/admin/flights?q=' . urlencode($q) . '&sort=' . urlencode($sort) . '&dir=' . urlencode($dir) . '&perPage=' . $perPage . '&page=');
+                  $prev = max(1, $page - 1);
+                  $next = min($pageCount, $page + 1);
+                ?>
+                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= e($base . $prev) ?>">Prev</a></li>
+                <li class="page-item active"><a class="page-link" href="#"><?= e((string) $page) ?></a></li>
+                <li class="page-item <?= $page >= $pageCount ? 'disabled' : '' ?>"><a class="page-link" href="<?= e($base . $next) ?>">Next</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="flightModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white" style="border:1px solid rgba(148,163,184,.18); border-radius:16px">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-airplane me-2"></i><span id="flightModalTitle">New Flight</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form method="post" id="flightForm" action="<?= e(base_url('/admin/flights/create')) ?>">
+          <div class="modal-body">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="flightId" value="" />
+
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <label class="form-label fw-bold">Title</label>
+                <input class="form-control" name="title" id="flightTitle" value="<?= e((string) ($flashOld['title'] ?? '')) ?>" required />
+                <?php if (!empty($flashErrors['title'][0])): ?><div class="text-danger small mt-1"><?= e((string) $flashErrors['title'][0]) ?></div><?php endif; ?>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-bold">Price From</label>
+                <input class="form-control" name="price_from" id="flightPrice" value="<?= e((string) ($flashOld['price_from'] ?? '')) ?>" placeholder="$299" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-bold">Origin</label>
+                <input class="form-control" name="origin" id="flightOrigin" value="<?= e((string) ($flashOld['origin'] ?? '')) ?>" placeholder="CMB" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-bold">Destination</label>
+                <input class="form-control" name="destination" id="flightDestination" value="<?= e((string) ($flashOld['destination'] ?? '')) ?>" placeholder="DXB" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Summary</label>
+                <input class="form-control" name="summary" id="flightSummary" value="<?= e((string) ($flashOld['summary'] ?? '')) ?>" placeholder="Limited-time fares for selected dates." />
+              </div>
+              <div class="col-12 d-flex gap-4">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="flightDeal" name="is_deal" value="1" <?= ((int)($flashOld['is_deal'] ?? 0) === 1) ? 'checked' : '' ?> />
+                  <label class="form-check-label fw-bold" for="flightDeal">Deal</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="flightActive" name="is_active" value="1" <?= ((int)($flashOld['is_active'] ?? 1) === 1) ? 'checked' : '' ?> />
+                  <label class="form-check-label fw-bold" for="flightActive">Active</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var modal = document.getElementById('flightModal');
+      if (!modal) return;
+
+      modal.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (!btn) return;
+
+        var mode = btn.getAttribute('data-mode') || 'create';
+        var form = document.getElementById('flightForm');
+        var title = document.getElementById('flightModalTitle');
+
+        var idEl = document.getElementById('flightId');
+        var titleEl = document.getElementById('flightTitle');
+        var summaryEl = document.getElementById('flightSummary');
+        var originEl = document.getElementById('flightOrigin');
+        var destEl = document.getElementById('flightDestination');
+        var priceEl = document.getElementById('flightPrice');
+        var dealEl = document.getElementById('flightDeal');
+        var activeEl = document.getElementById('flightActive');
+
+        if (mode === 'edit') {
+          if (title) title.textContent = 'Edit Flight';
+          if (form) form.action = '<?= e(base_url('/admin/flights/update')) ?>';
+
+          if (idEl) idEl.value = btn.getAttribute('data-id') || '';
+          if (titleEl) titleEl.value = btn.getAttribute('data-title') || '';
+          if (summaryEl) summaryEl.value = btn.getAttribute('data-summary') || '';
+          if (originEl) originEl.value = btn.getAttribute('data-origin') || '';
+          if (destEl) destEl.value = btn.getAttribute('data-destination') || '';
+          if (priceEl) priceEl.value = btn.getAttribute('data-price_from') || '';
+          var isDeal = btn.getAttribute('data-is_deal') || '0';
+          var isActive = btn.getAttribute('data-is_active') || '1';
+          if (dealEl) dealEl.checked = isDeal === '1';
+          if (activeEl) activeEl.checked = isActive === '1';
+        } else {
+          if (title) title.textContent = 'New Flight';
+          if (form) form.action = '<?= e(base_url('/admin/flights/create')) ?>';
+
+          if (idEl) idEl.value = '';
+          if (titleEl) titleEl.value = '';
+          if (summaryEl) summaryEl.value = '';
+          if (originEl) originEl.value = '';
+          if (destEl) destEl.value = '';
+          if (priceEl) priceEl.value = '';
+          if (dealEl) dealEl.checked = false;
+          if (activeEl) activeEl.checked = true;
+        }
+      });
+
+      var hasOld = <?= !empty($flashOld) ? 'true' : 'false' ?>;
+      if (hasOld) {
+        var inst = bootstrap.Modal.getOrCreateInstance(modal);
+        inst.show();
+      }
+    })();
+  </script>
+</template>

@@ -1,0 +1,184 @@
+<?php
+
+declare(strict_types=1);
+
+$heroHome = $heroHome ?? null;
+$settings = $settings ?? [];
+$bg = is_array($heroHome) ? trim((string) ($heroHome['bg_image_path'] ?? '')) : '';
+$heroStyle = '';
+if ($bg !== '') {
+    $u = base_url(ltrim($bg, '/'));
+    $heroStyle = ' style="background-image:linear-gradient(120deg, rgba(2,6,23,.78), rgba(2,6,23,.35)), url(' . e($u) . ');background-size:cover;background-position:center"';
+}
+
+$heroTitle = is_array($heroHome) && trim((string) ($heroHome['title'] ?? '')) !== ''
+    ? (string) $heroHome['title']
+    : (string) ($settings['site_name'] ?? 'HOME');
+$heroSub = is_array($heroHome) && ($heroHome['subtitle'] ?? null) !== null && trim((string) $heroHome['subtitle']) !== ''
+    ? (string) $heroHome['subtitle']
+    : (string) ($settings['home_hero_subtitle'] ?? '');
+$p1 = is_array($heroHome) ? trim((string) ($heroHome['primary_btn_label'] ?? '')) : '';
+$pu1 = is_array($heroHome) ? trim((string) ($heroHome['primary_btn_url'] ?? '')) : '';
+$p2 = is_array($heroHome) ? trim((string) ($heroHome['secondary_btn_label'] ?? '')) : '';
+$pu2 = is_array($heroHome) ? trim((string) ($heroHome['secondary_btn_url'] ?? '')) : '';
+if ($p1 === '') {
+    $p1 = (string) ($settings['nav_apply_label'] ?? 'Apply Now');
+}
+if ($pu1 === '') {
+    $pu1 = (string) ($settings['nav_apply_url'] ?? '/#apply');
+}
+if ($p2 === '') {
+    $p2 = (string) ($settings['nav_contact_label'] ?? 'Contact Us');
+}
+if ($pu2 === '') {
+    $pu2 = (string) ($settings['nav_contact_url'] ?? '/contact');
+}
+
+$services = $services ?? [];
+$ctaMid = $ctaMid ?? null;
+$ctaNews = $ctaNews ?? null;
+$posts = $posts ?? [];
+$formFields = $formFields ?? [];
+
+?>
+<section class="hero hero-home"<?= $heroStyle ?> aria-label="Hero">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
+    <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
+    <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
+      <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
+      <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-4 js-reveal">
+      <h2 class="fw-bold mb-2">Our Services</h2>
+      <p class="text-secondary mb-0">Everything you need for a smooth and confident journey.</p>
+    </div>
+
+    <div class="row g-3 g-md-4">
+      <?php foreach ($services as $svc): ?>
+        <?php
+          $link = (string) ($svc['link'] ?? '/');
+          $href = resolve_public_href($link);
+        ?>
+        <div class="col-12 col-md-6 col-lg-4 js-reveal">
+          <a class="service-card glass-card" href="<?= e($href) ?>" aria-label="<?= e((string) ($svc['title'] ?? '')) ?>">
+            <div class="service-card-top">
+              <div class="service-icon" aria-hidden="true"><?= e((string) ($svc['icon'] ?? '✈️')) ?></div>
+              <div class="service-title"><?= e(strtoupper((string) ($svc['title'] ?? ''))) ?></div>
+            </div>
+            <div class="service-desc"><?= e((string) ($svc['description'] ?? '')) ?></div>
+            <div class="service-cta">Learn more →</div>
+          </a>
+        </div>
+      <?php endforeach; ?>
+    </div>
+
+    <?php if (is_array($ctaMid)): ?>
+      <section class="home-cta js-reveal mt-5" aria-label="Call to action">
+        <div class="home-cta-inner glass-panel">
+          <h3 class="fw-bold mb-1"><?= e((string) ($ctaMid['title'] ?? '')) ?></h3>
+          <p class="text-secondary mb-3"><?= e((string) ($ctaMid['subtitle'] ?? '')) ?></p>
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a href="<?= e(resolve_public_href((string) ($ctaMid['primary_btn_url'] ?? '/#apply'))) ?>" class="btn btn-cta px-4"><?= e((string) ($ctaMid['primary_btn_label'] ?? 'Apply Now')) ?></a>
+            <a href="<?= e(resolve_public_href((string) ($ctaMid['secondary_btn_url'] ?? '/contact'))) ?>" class="btn btn-outline-secondary px-4 rounded-pill"><?= e((string) ($ctaMid['secondary_btn_label'] ?? 'Contact Us')) ?></a>
+          </div>
+        </div>
+      </section>
+    <?php endif; ?>
+
+    <section id="apply" class="js-reveal mt-5" aria-label="Application form">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+          <div class="card shadow-sm glass-card border-0">
+            <div class="card-body p-4">
+              <h3 class="fw-bold mb-1">Application Form</h3>
+              <p class="text-secondary mb-3">Fields marked with * are required</p>
+
+              <form method="post" action="<?= e(base_url('/applications')) ?>" class="needs-validation" novalidate id="tms-application-form">
+                <?= csrf_field() ?>
+                <input type="hidden" name="form_version" value="dynamic" />
+                <div class="row g-3">
+                  <?php foreach ($formFields as $field): ?>
+                    <?php
+                      $fname = (string) ($field['field_name'] ?? '');
+                      $label = (string) ($field['label'] ?? $fname);
+                      $ftype = (string) ($field['field_type'] ?? 'text');
+                      $req = (int) ($field['is_required'] ?? 0) === 1;
+                      $oldVal = (string) ($flashOld[$fname] ?? '');
+                    ?>
+                    <div class="col-12 <?= $ftype === 'textarea' ? '' : 'col-md-6' ?>">
+                      <label class="form-label"><?= e($label) ?><?= $req ? ' *' : '' ?></label>
+                      <?php if ($ftype === 'textarea'): ?>
+                        <textarea name="<?= e($fname) ?>" class="form-control" rows="3" <?= $req ? 'required' : '' ?>><?= e($oldVal) ?></textarea>
+                      <?php elseif ($ftype === 'select'): ?>
+                        <?php
+                          $opts = json_decode((string) ($field['options_json'] ?? '[]'), true);
+                          if (!is_array($opts)) {
+                              $opts = [];
+                          }
+                        ?>
+                        <select name="<?= e($fname) ?>" class="form-select" <?= $req ? 'required' : '' ?>>
+                          <option value=""><?= e('Select') ?></option>
+                          <?php foreach ($opts as $opt): ?>
+                            <option value="<?= e((string) $opt) ?>" <?= $oldVal === (string) $opt ? 'selected' : '' ?>><?= e((string) $opt) ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      <?php else: ?>
+                        <input
+                          name="<?= e($fname) ?>"
+                          class="form-control"
+                          type="<?= $ftype === 'email' ? 'email' : ($ftype === 'tel' ? 'tel' : ($ftype === 'number' ? 'number' : ($ftype === 'date' ? 'date' : 'text'))) ?>"
+                          value="<?= e($oldVal) ?>"
+                          <?= $req ? 'required' : '' ?>
+                        />
+                      <?php endif; ?>
+                      <div class="invalid-feedback">Please check this field.</div>
+                      <?php if (!empty($flashErrors[$fname])): ?>
+                        <div class="text-danger small mt-1"><?= e((string) ($flashErrors[$fname][0] ?? '')) ?></div>
+                      <?php endif; ?>
+                    </div>
+                  <?php endforeach; ?>
+                  <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-cta px-4" type="submit">Submit</button>
+                    <button class="btn btn-outline-secondary" type="reset">Reset</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="news" class="pt-5 js-reveal" aria-label="News">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold mb-2"><?= e(is_array($ctaNews) ? (string) ($ctaNews['title'] ?? 'News') : 'News') ?></h2>
+        <p class="text-secondary mb-0"><?= e(is_array($ctaNews) ? (string) ($ctaNews['subtitle'] ?? '') : 'Latest updates, offers, and travel tips.') ?></p>
+      </div>
+      <div class="row g-3">
+        <?php foreach ($posts as $post): ?>
+          <div class="col-12 col-md-4">
+            <article class="card h-100 glass-card border-0">
+              <div class="card-body">
+                <div class="fw-bold mb-1"><?= e((string) ($post['title'] ?? '')) ?></div>
+                <div class="text-secondary small mb-2"><?= e((string) ($post['excerpt'] ?? '')) ?></div>
+                <a class="stretched-link fw-bold" href="<?= e(base_url('/blog/' . rawurlencode((string) ($post['slug'] ?? '')))) ?>">Read more</a>
+              </div>
+            </article>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <?php if (is_array($ctaNews)): ?>
+        <div class="text-center mt-3">
+          <a class="btn btn-cta btn-sm px-4 me-2" href="<?= e(resolve_public_href((string) ($ctaNews['primary_btn_url'] ?? '/blog'))) ?>"><?= e((string) ($ctaNews['primary_btn_label'] ?? 'View all')) ?></a>
+          <a class="btn btn-outline-secondary btn-sm px-4 rounded-pill" href="<?= e(resolve_public_href((string) ($ctaNews['secondary_btn_url'] ?? '/contact'))) ?>"><?= e((string) ($ctaNews['secondary_btn_label'] ?? 'Contact')) ?></a>
+        </div>
+      <?php endif; ?>
+    </section>
+  </div>
+</section>

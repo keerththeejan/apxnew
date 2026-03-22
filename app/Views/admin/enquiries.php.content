@@ -1,0 +1,198 @@
+<?php
+
+declare(strict_types=1);
+
+$messages = $messages ?? [];
+$q = (string) ($q ?? '');
+$filter = (string) ($filter ?? 'all');
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+$baseQuery = static function (int $p) use ($q, $filter): string {
+    $parts = [];
+    if ($q !== '') {
+        $parts[] = 'q=' . rawurlencode($q);
+    }
+    if ($filter !== '' && $filter !== 'all') {
+        $parts[] = 'filter=' . rawurlencode($filter);
+    }
+    if ($p > 1) {
+        $parts[] = 'page=' . $p;
+    }
+    return $parts !== [] ? '?' . implode('&', $parts) : '';
+};
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Messages</h2>
+          <form class="d-flex flex-wrap gap-2 align-items-center justify-content-end" method="get" action="<?= e(base_url('/admin/enquiries')) ?>">
+            <select class="form-select form-select-sm" name="filter" style="max-width:140px">
+              <option value="all" <?= $filter === 'all' ? 'selected' : '' ?>>All</option>
+              <option value="unread" <?= $filter === 'unread' ? 'selected' : '' ?>>New</option>
+              <option value="read" <?= $filter === 'read' ? 'selected' : '' ?>>Read</option>
+            </select>
+            <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search messages…" style="max-width:240px" />
+            <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+          </form>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Subject</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th class="d-none d-md-table-cell">Date</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($messages === []): ?>
+                  <tr><td colspan="6" class="text-white-50">No messages yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($messages as $m): ?>
+                  <?php
+                    $mid = (int) ($m['id'] ?? 0);
+                    $read = (int) ($m['is_read'] ?? 0) === 1;
+                    $name = (string) ($m['name'] ?? '');
+                    $subj = (string) ($m['subject'] ?? '');
+                    $email = (string) ($m['email'] ?? '');
+                    $body = (string) ($m['message'] ?? '');
+                    $phone = (string) ($m['phone'] ?? '');
+                    $created = (string) ($m['created_at'] ?? '');
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($name) ?></td>
+                    <td class="text-white-50 small"><?= e($subj !== '' ? $subj : '—') ?></td>
+                    <td class="text-white-50 small"><?= e($email !== '' ? $email : '—') ?></td>
+                    <td>
+                      <?php if ($read): ?>
+                        <span class="badge text-bg-success">Read</span>
+                      <?php else: ?>
+                        <span class="badge text-bg-info">New</span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="text-white-50 small d-none d-md-table-cell"><?= e($created) ?></td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#msgModal"
+                        data-id="<?= (int) $mid ?>"
+                        data-name="<?= e($name) ?>"
+                        data-subject="<?= e($subj) ?>"
+                        data-email="<?= e($email) ?>"
+                        data-phone="<?= e($phone) ?>"
+                        data-body="<?= e(str_replace(["\r", "\n", "\t"], ' ', $body)) ?>"
+                        data-read="<?= $read ? '1' : '0' ?>"
+                      ><i class="bi bi-eye"></i></button>
+                      <?php if (!$read): ?>
+                        <form class="d-inline" method="post" action="<?= e(base_url('/admin/enquiries/read')) ?>">
+                          <?= csrf_field() ?>
+                          <input type="hidden" name="id" value="<?= $mid ?>" />
+                          <input type="hidden" name="return_q" value="<?= e($q) ?>" />
+                          <input type="hidden" name="return_filter" value="<?= e($filter) ?>" />
+                          <input type="hidden" name="return_page" value="<?= (int) $page ?>" />
+                          <button class="btn btn-outline-light btn-sm" type="submit" title="Mark read"><i class="bi bi-check2"></i></button>
+                        </form>
+                      <?php else: ?>
+                        <form class="d-inline" method="post" action="<?= e(base_url('/admin/enquiries/unread')) ?>">
+                          <?= csrf_field() ?>
+                          <input type="hidden" name="id" value="<?= $mid ?>" />
+                          <input type="hidden" name="return_q" value="<?= e($q) ?>" />
+                          <input type="hidden" name="return_filter" value="<?= e($filter) ?>" />
+                          <input type="hidden" name="return_page" value="<?= (int) $page ?>" />
+                          <button class="btn btn-outline-light btn-sm" type="submit" title="Mark as new"><i class="bi bi-envelope"></i></button>
+                        </form>
+                      <?php endif; ?>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/enquiries/delete')) ?>" onsubmit="return confirm('Delete this message?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= $mid ?>" />
+                        <input type="hidden" name="return_q" value="<?= e($q) ?>" />
+                        <input type="hidden" name="return_filter" value="<?= e($filter) ?>" />
+                        <input type="hidden" name="return_page" value="<?= (int) $page ?>" />
+                        <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <?php if ($pageCount > 1): ?>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+              <div class="text-white-50 small">Total: <?= (int) ($total ?? 0) ?></div>
+              <nav aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                  <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                    <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                      <a class="page-link" href="<?= e(base_url('/admin/enquiries' . $baseQuery($p))) ?>"><?= $p ?></a>
+                    </li>
+                  <?php endfor; ?>
+                </ul>
+              </nav>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="msgModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Message</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-1"><strong id="mv_name"></strong></p>
+          <p class="small text-white-50 mb-2"><span id="mv_email"></span> · <span id="mv_phone"></span></p>
+          <p class="fw-bold mb-2" id="mv_subject"></p>
+          <pre class="text-white-50 small mb-0" style="white-space:pre-wrap;font-family:inherit" id="mv_body"></pre>
+        </div>
+        <div class="modal-footer border-secondary">
+          <a class="btn btn-outline-light" id="mv_mailto" href="#"><i class="bi bi-reply me-1"></i>Reply by email</a>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('msgModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      if (!btn) return;
+      var email = btn.getAttribute('data-email') || '';
+      var subj = btn.getAttribute('data-subject') || '';
+      var body = btn.getAttribute('data-body') || '';
+      document.getElementById('mv_name').textContent = btn.getAttribute('data-name') || '';
+      document.getElementById('mv_email').textContent = email || '—';
+      document.getElementById('mv_phone').textContent = btn.getAttribute('data-phone') || '—';
+      document.getElementById('mv_subject').textContent = subj || '(no subject)';
+      document.getElementById('mv_body').textContent = body;
+      var a = document.getElementById('mv_mailto');
+      if (email.indexOf('@') !== -1) {
+        var q = 'subject=' + encodeURIComponent('Re: ' + subj) + '&body=' + encodeURIComponent(body);
+        a.href = 'mailto:' + email + '?' + q;
+        a.classList.remove('disabled');
+      } else {
+        a.href = '#';
+        a.classList.add('disabled');
+      }
+    });
+  })();
+  </script>
+</template>

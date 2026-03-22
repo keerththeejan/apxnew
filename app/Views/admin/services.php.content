@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+$services = $services ?? [];
+$q = (string) ($q ?? '');
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Services</h2>
+          <div class="d-flex gap-2">
+            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/services')) ?>">
+              <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search..." style="max-width:220px" />
+              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+            </form>
+            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#svcModal" data-mode="create"><i class="bi bi-plus-lg me-1"></i>New</button>
+          </div>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr><th>Title</th><th class="d-none d-md-table-cell">Link</th><th>Order</th><th>Status</th><th class="text-end">Actions</th></tr>
+              </thead>
+              <tbody>
+                <?php if ($services === []): ?>
+                  <tr><td colspan="5" class="text-white-50">No services.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($services as $s): ?>
+                  <?php
+                    $id = (int) ($s['id'] ?? 0);
+                    $title = (string) ($s['title'] ?? '');
+                    $icon = (string) ($s['icon'] ?? '');
+                    $desc = (string) ($s['description'] ?? '');
+                    $link = (string) ($s['link'] ?? '');
+                    $sort = (int) ($s['sort_order'] ?? 0);
+                    $active = (int) ($s['is_active'] ?? 1);
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($title) ?></td>
+                    <td class="text-white-50 small d-none d-md-table-cell"><?= e($link) ?></td>
+                    <td><?= (int) $sort ?></td>
+                    <td><?= $active === 1 ? '<span class="badge text-bg-success">On</span>' : '<span class="badge text-bg-secondary">Off</span>' ?></td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#svcModal" data-mode="edit"
+                        data-id="<?= e((string) $id) ?>" data-icon="<?= e($icon) ?>" data-title="<?= e($title) ?>" data-description="<?= e($desc) ?>" data-link="<?= e($link) ?>" data-sort="<?= e((string) $sort) ?>" data-active="<?= e((string) $active) ?>">Edit</button>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/services/delete')) ?>" onsubmit="return confirm('Delete this service?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) $id ?>" />
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if ($pageCount > 1): ?>
+            <nav class="mt-3">
+              <ul class="pagination pagination-sm mb-0">
+                <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                  <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                    <a class="page-link" href="<?= e(base_url('/admin/services?q=' . urlencode($q) . '&page=' . $p)) ?>"><?= $p ?></a>
+                  </li>
+                <?php endfor; ?>
+              </ul>
+            </nav>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="svcModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Service</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="<?= e(base_url('/admin/services/create')) ?>" id="svcForm">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="svc_id" value="" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-md-6"><label class="form-label">Icon (Bootstrap class)</label><input class="form-control" name="icon" id="svc_icon" placeholder="bi-airplane" /></div>
+              <div class="col-md-6"><label class="form-label">Sort order</label><input class="form-control" type="number" name="sort_order" id="svc_sort" value="0" /></div>
+              <div class="col-12"><label class="form-label">Title</label><input class="form-control" name="title" id="svc_title" required /></div>
+              <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" id="svc_desc" rows="3"></textarea></div>
+              <div class="col-12"><label class="form-label">Link</label><input class="form-control" name="link" id="svc_link" placeholder="/flights" /></div>
+              <div class="col-12"><label class="form-label">Active</label><select class="form-select" name="is_active" id="svc_active"><option value="1">Yes</option><option value="0">No</option></select></div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('svcModal');
+    var form = document.getElementById('svcForm');
+    if (!modal || !form) return;
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      var mode = btn && btn.getAttribute('data-mode') === 'edit' ? 'edit' : 'create';
+      form.reset();
+      document.getElementById('svc_id').value = '';
+      form.action = mode === 'edit' ? '<?= e(base_url('/admin/services/update')) ?>' : '<?= e(base_url('/admin/services/create')) ?>';
+      if (mode === 'edit' && btn) {
+        document.getElementById('svc_id').value = btn.getAttribute('data-id') || '';
+        document.getElementById('svc_icon').value = btn.getAttribute('data-icon') || '';
+        document.getElementById('svc_title').value = btn.getAttribute('data-title') || '';
+        document.getElementById('svc_desc').value = btn.getAttribute('data-description') || '';
+        document.getElementById('svc_link').value = btn.getAttribute('data-link') || '';
+        document.getElementById('svc_sort').value = btn.getAttribute('data-sort') || '0';
+        document.getElementById('svc_active').value = btn.getAttribute('data-active') || '1';
+      }
+    });
+  })();
+  </script>
+</template>
