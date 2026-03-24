@@ -4,13 +4,20 @@ Options -Indexes
 
 DirectoryIndex index.php index.html
 
+# Force HTTPS on live hosts (keeps localhost/http working).
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$ [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 <FilesMatch "^(\.env|\.env\.example|composer\.(json|lock)|package\.json|phpunit\.xml)$">
   Require all denied
 </FilesMatch>
 
 RewriteRule ^(app|config|routes|database)/ - [F,L]
 
-RewriteCond %{REQUEST_URI} !/public/
+# Serve /assets/* from /public/assets/* (works on localhost + cPanel).
+RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
 
 # Force dynamic PHP routes for /admin (MVC) instead of the static /public/admin directory.
 RewriteRule ^admin/?$ public/index.php [L]
@@ -20,14 +27,16 @@ RewriteRule ^admin/(?!.*\.html$).+$ public/index.php [L]
 
 # Allow static admin mockups like /admin/dashboard.html to be served from /public/admin.
 
-# If the requested path exists as a real file/dir in /apx, serve it.
+# If the requested path exists as a real file/dir here, serve it.
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# If the requested path exists under /apx/public, serve it from there.
-RewriteCond %{DOCUMENT_ROOT}/apx/public/$1 -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/apx/public/$1 -d
+# If the requested path exists under ./public, serve it from there.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond public/$1 -f [OR]
+RewriteCond public/$1 -d
 RewriteRule ^(.*)$ public/$1 [L]
 
 # Otherwise route through the front controller.
@@ -35,13 +44,13 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ public/index.php [L]
 
-RewriteRule ^index\.html$ / [R=301,L]
-RewriteRule ^about\.html$ /about [R=301,L]
-RewriteRule ^contact\.html$ /contact [R=301,L]
-RewriteRule ^visa\.html$ /visas [R=301,L]
-RewriteRule ^flights\.html$ /flights [R=301,L]
-RewriteRule ^hotels\.html$ /hotels [R=301,L]
-RewriteRule ^insurance\.html$ /insurance [R=301,L]
+RewriteRule ^index\.html$ ./ [R=301,L]
+RewriteRule ^about\.html$ about [R=301,L]
+RewriteRule ^contact\.html$ contact [R=301,L]
+RewriteRule ^visa\.html$ visas [R=301,L]
+RewriteRule ^flights\.html$ flights [R=301,L]
+RewriteRule ^hotels\.html$ hotels [R=301,L]
+RewriteRule ^insurance\.html$ insurance [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

@@ -17,9 +17,25 @@ function base_url(string $path = ''): string
 {
     $configured = rtrim((string) (env('APP_BASE_URL', '') ?? ''), '/');
     $path = '/' . ltrim($path, '/');
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+
+    $isLocalHost = static function (string $h): bool {
+        $h = strtolower(trim($h));
+        if ($h === '') {
+            return false;
+        }
+        if ($h === 'localhost' || $h === '127.0.0.1' || $h === '::1') {
+            return true;
+        }
+        return str_ends_with($h, '.test') || str_ends_with($h, '.local');
+    };
 
     if ($configured !== '') {
-        return $configured . $path;
+        $cfgHost = strtolower((string) (parse_url($configured, PHP_URL_HOST) ?? ''));
+        // Ignore localhost APP_BASE_URL on production domains.
+        if (!($cfgHost !== '' && $isLocalHost($cfgHost) && !$isLocalHost($host))) {
+            return $configured . $path;
+        }
     }
 
     $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
@@ -31,6 +47,14 @@ function base_url(string $path = ''): string
     }
 
     $basePath = $dir === '' ? '' : $dir;
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    if ((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        $scheme = 'https';
+    }
+    if ($host !== '') {
+        return $scheme . '://' . $host . $basePath . $path;
+    }
+
     return $basePath . $path;
 }
 

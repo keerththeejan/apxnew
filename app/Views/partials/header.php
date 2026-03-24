@@ -92,6 +92,29 @@ if ($vehicleModuleEnabled) {
     }
 }
 
+// Ensure Quote link is visible even when nav_items exists but lacks it.
+$hasQuoteNav = false;
+foreach ($navLinks as $nl) {
+    $u = strtolower(trim((string) ($nl['url'] ?? '')));
+    if (
+        $u === '/quote' || $u === 'quote' || $u === '/quote/' ||
+        $u === '/#get-quote' || $u === '#get-quote'
+    ) {
+        $hasQuoteNav = true;
+        break;
+    }
+}
+if (!$hasQuoteNav) {
+    $navLinks[] = [
+        'id' => 0,
+        'label' => 'Get a quote',
+        'url' => '/quote',
+        'open_new_tab' => 0,
+        'icon' => null,
+        'children' => [],
+    ];
+}
+
 if ($navCtas === []) {
     $navCtas = [
         [

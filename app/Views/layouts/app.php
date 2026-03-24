@@ -24,6 +24,7 @@ unset($_SESSION['flash_errors'], $_SESSION['flash_old'], $_SESSION['flash_succes
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <base href="<?= e(rtrim(base_url('/'), '/') . '/') ?>" />
   <title><?= e($title) ?></title>
   <?php if (trim($metaDescription) !== ''): ?>
   <meta name="description" content="<?= e($metaDescription) ?>" />

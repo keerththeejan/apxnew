@@ -959,29 +959,47 @@ textarea{
 
 /* Vehicle booking module */
 .vehicle-booking-card{
-  border:1px solid rgba(148,163,184,.25);
+  position:relative;
   border-radius:18px;
-  background:linear-gradient(150deg,#0b1120,#0f172a 55%,#0a1327);
-  box-shadow:0 22px 48px rgba(2,6,23,.45);
-  padding:clamp(1rem, 3vw, 1.5rem);
+  padding:clamp(1.25rem, 3vw, 1.75rem);
+  background:linear-gradient(145deg,#0b1120 0%,#0f172a 55%,#0c1222 100%);
+  box-shadow:
+    0 24px 56px rgba(2,6,23,.55),
+    0 0 0 1px rgba(99,102,241,.22),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  border:1px solid transparent;
+  background-clip:padding-box;
   color:#e2e8f0;
+}
+.vehicle-booking-card::before{
+  content:"";
+  position:absolute;inset:0;border-radius:inherit;padding:1px;
+  background:linear-gradient(135deg,rgba(99,102,241,.45),rgba(59,130,246,.25),rgba(168,85,247,.35));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  pointer-events:none;
 }
 .vehicle-booking-head h2{
   margin:0 0 4px;
   color:#fff;
-  font-weight:800;
+  font-weight:700;
+  font-size:clamp(1.25rem, 2.5vw, 1.5rem);
   letter-spacing:-.02em;
 }
 .vehicle-booking-head p{
-  margin:0 0 12px;
+  margin:0 0 14px;
   color:#94a3b8;
-  font-weight:600;
+  font-weight:500;
 }
 .vehicle-booking-form .form-control,
 .vehicle-booking-form .form-select{
-  background:rgba(2,6,23,.45);
+  border-radius:12px;
+  background:rgba(15,23,42,.85);
   border:1px solid rgba(148,163,184,.28);
   color:#f8fafc;
+  min-height:48px;
+  padding:12px 14px;
 }
 .vehicle-booking-form .form-control::placeholder{
   color:#64748b;
@@ -989,7 +1007,8 @@ textarea{
 .vehicle-booking-form .form-control:focus,
 .vehicle-booking-form .form-select:focus{
   border-color:rgba(59,130,246,.75);
-  box-shadow:0 0 0 3px rgba(59,130,246,.22);
+  box-shadow:0 0 0 3px rgba(59,130,246,.22),0 0 24px rgba(99,102,241,.18);
+  background:rgba(15,23,42,.95);
 }
 .vehicle-booking-grid{
   display:grid;
@@ -1000,16 +1019,33 @@ textarea{
 .vehicle-booking-field--full{grid-column:1 / -1;}
 .vehicle-booking-field label{
   display:block;
-  margin-bottom:6px;
-  color:#93c5fd;
-  font-weight:700;
+  margin-bottom:8px;
+  color:#94a3b8;
+  font-weight:600;
   font-size:13px;
 }
 .vehicle-booking-actions{
   margin-top:14px;
   display:flex;
   gap:10px;
-  justify-content:flex-end;
+  justify-content:center;
+}
+.vehicle-booking-actions .btn{
+  min-height:46px;
+  padding:11px 22px;
+  border-radius:999px;
+  font-weight:600;
+}
+.vehicle-booking-actions .btn-outline-light{
+  border-color:rgba(148,163,184,.35);
+  color:#cbd5e1;
+  background:transparent;
+}
+.vehicle-booking-actions .btn-outline-light:hover{
+  color:#fff;
+  border-color:rgba(99,102,241,.55);
+  box-shadow:0 0 16px rgba(99,102,241,.22);
+  background:rgba(99,102,241,.08);
 }
 .vb-datetime-quick{
   display:flex;
@@ -1025,11 +1061,18 @@ textarea{
   min-height:18px;
 }
 .vehicle-booking-preview{
-  margin-top:14px;
+  margin-top:16px;
   border-radius:14px;
   border:1px solid rgba(148,163,184,.2);
   background:rgba(2,6,23,.45);
-  padding:12px;
+  padding:14px;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .35s ease, transform .35s ease;
+}
+.vehicle-booking-preview:not([hidden]){
+  opacity:1;
+  transform:translateY(0);
 }
 .vehicle-booking-preview h3,
 .vehicle-booking-preview h4{
@@ -1046,7 +1089,7 @@ textarea{
   display:flex;
   justify-content:space-between;
   gap:10px;
-  padding:8px 10px;
+  padding:10px 11px;
   border-radius:10px;
   background:rgba(15,23,42,.7);
   border:1px solid rgba(148,163,184,.16);
@@ -1211,7 +1254,35 @@ textarea{
     grid-template-columns:1fr;
   }
 }
+.vb-datetime-quick .btn{
+  border-radius:999px;
+  border-color:rgba(148,163,184,.35);
+  color:#cbd5e1;
+}
+.vb-datetime-quick .btn:hover{
+  color:#fff;
+  border-color:rgba(99,102,241,.55);
+  box-shadow:0 0 16px rgba(99,102,241,.22);
+  background:rgba(99,102,241,.08);
+}
+
+/* Match quote widget compact width on large screens */
+@media (min-width: 992px){
+  .vehicle-booking-card{
+    max-width:760px;
+    margin:0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .vehicle-booking-preview{transition:none;opacity:1;transform:none;}
+}
+
 @media (max-width: 576px){
+  .vehicle-booking-card{
+    border-radius:16px;
+    padding:1rem;
+  }
   .vehicle-booking-actions{
     justify-content:stretch;
   }

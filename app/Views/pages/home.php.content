@@ -340,8 +340,6 @@ if (!function_exists('apx_home_banner_slide_markup')) {
       </div>
     </section>
 
-    <?php require __DIR__ . '/../partials/quote_widget.php'; ?>
-
     <section id="news" class="pt-5 js-reveal" aria-label="News">
       <div class="text-center mb-4">
         <h2 class="fw-bold mb-2"><?= e(is_array($ctaNews) ? (string) ($ctaNews['title'] ?? 'News') : 'News') ?></h2>
