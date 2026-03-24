@@ -102,6 +102,7 @@ final class SettingsController extends AdminBaseController
         Setting::set('theme_mode', $themeMode);
         Setting::set('clock_enabled', Request::post('clock_enabled') === '1' ? '1' : '0');
         Setting::set('clock_time_format', $clockFmt);
+        Setting::set('vehicle_booking_module_enabled', Request::post('vehicle_booking_module_enabled') === '1' ? '1' : '0');
 
         // Keep legacy default_theme in sync for any code still reading it.
         if ($themeMode === 'dark') {

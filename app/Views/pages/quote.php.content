@@ -1,0 +1,18 @@
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">GET A QUOTE</h1>
+    <p class="hero-sub js-reveal">Estimate your shipment cost in seconds.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8 text-center js-reveal">
+        <p class="text-secondary mb-3">The live price quote calculator is on the home page, right below the application form.</p>
+        <a class="btn btn-cta px-4 me-2" href="<?= e(base_url('/#get-quote')) ?>">Open price quote</a>
+        <a class="btn btn-outline-secondary rounded-pill px-4" href="<?= e(base_url('/contact')) ?>">Contact us</a>
+      </div>
+    </div>
+  </div>
+</section>

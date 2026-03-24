@@ -69,6 +69,9 @@ if (!function_exists('apx_home_banner_slide_markup')) {
         <?php if ($p2 !== ''): ?>
           <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
         <?php endif; ?>
+        <?php if ((string) ($settings['vehicle_booking_module_enabled'] ?? '1') === '1'): ?>
+          <a class="btn btn-cta-outline px-4" href="<?= e(base_url('/vehicle-booking')) ?>">Vehicle Booking</a>
+        <?php endif; ?>
       </div>
     </div>
   </section>
@@ -153,6 +156,9 @@ if (!function_exists('apx_home_banner_slide_markup')) {
                 <?php if ($p2 !== ''): ?>
                   <a class="btn btn-cta-outline px-4" href="<?= e(resolve_public_href($pu2)) ?>"><?= e($p2) ?></a>
                 <?php endif; ?>
+                <?php if ((string) ($settings['vehicle_booking_module_enabled'] ?? '1') === '1'): ?>
+                  <a class="btn btn-cta-outline px-4" href="<?= e(base_url('/vehicle-booking')) ?>">Vehicle Booking</a>
+                <?php endif; ?>
               </div>
             </div>
           </section>
@@ -168,6 +174,18 @@ if (!function_exists('apx_home_banner_slide_markup')) {
       <span class="visually-hidden">Next</span>
     </button>
   </div>
+<?php endif; ?>
+
+<?php if ((string) ($settings['vehicle_booking_module_enabled'] ?? '1') === '1'): ?>
+  <section class="py-4">
+    <div class="container">
+      <div class="glass-panel text-center js-reveal">
+        <h2 class="fw-bold mb-2">Need a Ride or Rental?</h2>
+        <p class="text-secondary mb-3">Book Car, Van, SUV, Bike or Luxury vehicle with live pricing.</p>
+        <a class="btn btn-cta px-4" href="<?= e(base_url('/vehicle-booking')) ?>">Vehicle Booking</a>
+      </div>
+    </div>
+  </section>
 <?php endif; ?>
 
 <section class="py-5">
@@ -200,7 +218,21 @@ if (!function_exists('apx_home_banner_slide_markup')) {
                 $iconMarkup = e($svcIcon);
             }
             $svcCountry = strtoupper(trim((string) ($svc['country_code'] ?? '')));
-            $svcFlagUrl = $svcCountry !== '' ? \App\Services\CountryCatalog::flagUrl($svcCountry, 40) : '';
+            $hasSvcFlag = $svcCountry !== '';
+            $svcFlagSrc = '';
+            $svcFlagSrc2x = '';
+            $svcFlagSrcSm = '';
+            $svcFlagSrc2xSm = '';
+            if ($hasSvcFlag) {
+                $fp = \App\Services\CountryCatalog::flagImgSrcPair($svcCountry, 100);
+                $svcFlagSrc = (string) ($fp['src'] ?? '');
+                $svcFlagSrc2x = (string) ($fp['src2x'] ?? '');
+                if ($svcImgUrl !== '') {
+                    $fps = \App\Services\CountryCatalog::flagImgSrcPair($svcCountry, 78);
+                    $svcFlagSrcSm = (string) ($fps['src'] ?? '');
+                    $svcFlagSrc2xSm = (string) ($fps['src2x'] ?? '');
+                }
+            }
           ?>
           <a class="service-card glass-card<?= $svcImgUrl !== '' ? ' service-card--has-image' : '' ?>" href="<?= e($href) ?>" aria-label="<?= e((string) ($svc['title'] ?? '')) ?>">
             <?php if ($svcImgUrl !== ''): ?>
@@ -210,16 +242,16 @@ if (!function_exists('apx_home_banner_slide_markup')) {
             <?php endif; ?>
             <div class="service-card-top">
               <?php if ($svcImgUrl === ''): ?>
-                <div class="service-icon<?= $svcFlagUrl !== '' ? ' service-icon--flag' : '' ?>" aria-hidden="true">
-                  <?php if ($svcFlagUrl !== ''): ?>
-                    <img class="service-flag-img" src="<?= e($svcFlagUrl) ?>" alt="" width="74" height="50" loading="lazy" decoding="async" />
+                <div class="service-icon<?= $hasSvcFlag ? ' service-icon--flag' : '' ?>" aria-hidden="true">
+                  <?php if ($hasSvcFlag): ?>
+                    <img class="service-flag-img" src="<?= e($svcFlagSrc) ?>" srcset="<?= e($svcFlagSrc) ?> 1x, <?= e($svcFlagSrc2x) ?> 2x" sizes="100px" alt="" width="100" height="68" loading="lazy" decoding="async" />
                   <?php else: ?>
                     <?= $iconMarkup ?>
                   <?php endif; ?>
                 </div>
-              <?php elseif ($svcFlagUrl !== ''): ?>
+              <?php elseif ($hasSvcFlag): ?>
                 <div class="service-card-flag" aria-hidden="true">
-                  <img src="<?= e($svcFlagUrl) ?>" alt="" width="64" height="42" loading="lazy" decoding="async" />
+                  <img class="service-card-flag-img" src="<?= e($svcFlagSrcSm) ?>" srcset="<?= e($svcFlagSrcSm) ?> 1x, <?= e($svcFlagSrc2xSm) ?> 2x" sizes="78px" alt="" width="78" height="52" loading="lazy" decoding="async" />
                 </div>
               <?php endif; ?>
               <div class="service-title"><?= e(strtoupper((string) ($svc['title'] ?? ''))) ?></div>
@@ -307,6 +339,8 @@ if (!function_exists('apx_home_banner_slide_markup')) {
         </div>
       </div>
     </section>
+
+    <?php require __DIR__ . '/../partials/quote_widget.php'; ?>
 
     <section id="news" class="pt-5 js-reveal" aria-label="News">
       <div class="text-center mb-4">

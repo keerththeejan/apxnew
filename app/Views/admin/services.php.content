@@ -101,7 +101,7 @@ $adminServicesQuery = static function (string $q, string $country, int $page): s
                     $sort = (int) ($s['sort_order'] ?? 0);
                     $active = (int) ($s['is_active'] ?? 1);
                     $cc = strtoupper(trim((string) ($s['country_code'] ?? '')));
-                    $flagUrl = ($cc !== '' && $servicesCountryColumn) ? CountryCatalog::flagUrl($cc, 40) : '';
+                    $flagUrl = ($cc !== '' && $servicesCountryColumn) ? CountryCatalog::flagUrl($cc, 120) : '';
                   ?>
                   <tr>
                     <td class="d-none d-sm-table-cell">

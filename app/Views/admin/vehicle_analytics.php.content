@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+$statusCounts = is_array($statusCounts ?? null) ? $statusCounts : [];
+$driverPerformance = $driverPerformance ?? [];
+$vehicleUtilization = $vehicleUtilization ?? [];
+?>
+<template id="page-content">
+  <div class="row g-3">
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="sf-stat"><div class="sf-stat-label">Total bookings</div><div class="sf-stat-value"><?= (int) ($totalBookings ?? 0) ?></div></div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="sf-stat"><div class="sf-stat-label">Active trips</div><div class="sf-stat-value"><?= (int) ($activeTrips ?? 0) ?></div></div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="sf-stat"><div class="sf-stat-label">Daily revenue</div><div class="sf-stat-value">LKR <?= e(number_format((float) ($dailyRevenue ?? 0), 2)) ?></div></div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="sf-stat"><div class="sf-stat-label">Monthly revenue</div><div class="sf-stat-value">LKR <?= e(number_format((float) ($monthlyRevenue ?? 0), 2)) ?></div></div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="sf-card">
+        <div class="sf-card-header"><h2 class="sf-card-title">Status breakdown</h2></div>
+        <div class="sf-card-body">
+          <?php foreach (['pending','confirmed','assigned','on_trip','completed','cancelled'] as $k): ?>
+            <div class="d-flex justify-content-between py-1 border-bottom border-secondary-subtle"><span><?= e($k) ?></span><strong><?= (int) ($statusCounts[$k] ?? 0) ?></strong></div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-8">
+      <div class="sf-card">
+        <div class="sf-card-header"><h2 class="sf-card-title">Driver performance</h2></div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0"><thead><tr><th>Driver</th><th>Trips</th><th>Revenue</th></tr></thead><tbody>
+              <?php if ($driverPerformance === []): ?><tr><td colspan="3" class="text-white-50">No data.</td></tr><?php endif; ?>
+              <?php foreach ($driverPerformance as $d): ?>
+                <tr><td><?= e((string) ($d['name'] ?? '')) ?></td><td><?= (int) ($d['trips'] ?? 0) ?></td><td>LKR <?= e(number_format((float) ($d['revenue'] ?? 0), 2)) ?></td></tr>
+              <?php endforeach; ?>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header"><h2 class="sf-card-title">Vehicle utilization</h2></div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0"><thead><tr><th>Vehicle</th><th>Trips</th></tr></thead><tbody>
+              <?php if ($vehicleUtilization === []): ?><tr><td colspan="2" class="text-white-50">No data.</td></tr><?php endif; ?>
+              <?php foreach ($vehicleUtilization as $v): ?>
+                <tr><td><?= e((string) ($v['name'] ?? '')) ?></td><td><?= (int) ($v['trips'] ?? 0) ?></td></tr>
+              <?php endforeach; ?>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

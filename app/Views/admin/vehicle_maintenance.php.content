@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$vehicles = $vehicles ?? [];
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$schemaReady = (bool) ($schemaReady ?? true);
+?>
+<template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?><div class="alert alert-warning mb-0">Maintenance table is not ready. Run <code>php database/migrate.php</code>.</div><?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+    <div class="col-12 col-xl-4">
+      <div class="sf-card"><div class="sf-card-header"><h2 class="sf-card-title">Log maintenance</h2></div><div class="sf-card-body">
+        <form method="post" action="<?= e(base_url('/admin/vehicle-maintenance/create')) ?>">
+          <?= csrf_field() ?>
+          <select class="form-select mb-2" name="vehicle_id" required>
+            <option value="">Select vehicle</option>
+            <?php foreach ($vehicles as $v): ?><option value="<?= (int) ($v['id'] ?? 0) ?>"><?= e((string) ($v['name'] ?? '')) ?></option><?php endforeach; ?>
+          </select>
+          <input class="form-control mb-2" name="title" placeholder="Maintenance title" required />
+          <textarea class="form-control mb-2" rows="3" name="details" placeholder="Details"></textarea>
+          <div class="row g-2 mb-2">
+            <div class="col-6"><input class="form-control" type="date" name="maintenance_date" value="<?= e(date('Y-m-d')) ?>" required /></div>
+            <div class="col-6"><input class="form-control" type="date" name="next_due_date" /></div>
+          </div>
+          <select class="form-select mb-2" name="status"><option value="scheduled">Scheduled</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select>
+          <button class="btn btn-primary w-100" type="submit">Save</button>
+        </form>
+      </div></div>
+    </div>
+    <div class="col-12 col-xl-8">
+      <div class="sf-card"><div class="sf-card-header"><h2 class="sf-card-title">Maintenance logs</h2></div><div class="sf-card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Vehicle</th><th>Title</th><th>Date</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+            <tbody>
+              <?php if ($items === []): ?><tr><td colspan="5" class="text-white-50">No logs yet.</td></tr><?php endif; ?>
+              <?php foreach ($items as $m): ?>
+                <tr>
+                  <td><?= e((string) ($m['vehicle_name'] ?? '')) ?></td>
+                  <td><?= e((string) ($m['title'] ?? '')) ?><div class="small text-white-50"><?= e((string) ($m['details'] ?? '')) ?></div></td>
+                  <td><?= e((string) ($m['maintenance_date'] ?? '')) ?></td>
+                  <td><?= e((string) ($m['status'] ?? '')) ?></td>
+                  <td class="text-end">
+                    <form class="d-inline" method="post" action="<?= e(base_url('/admin/vehicle-maintenance/delete')) ?>" onsubmit="return confirm('Delete this item?');">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="id" value="<?= (int) ($m['id'] ?? 0) ?>" />
+                      <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                    </form>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php if ($pageCount > 1): ?>
+          <nav class="mt-3"><ul class="pagination pagination-sm mb-0">
+            <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+              <li class="page-item <?= $p === $page ? 'active' : '' ?>"><a class="page-link" href="<?= e(base_url('/admin/vehicle-maintenance?page=' . $p)) ?>"><?= $p ?></a></li>
+            <?php endfor; ?>
+          </ul></nav>
+        <?php endif; ?>
+      </div></div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,138 @@
+<?php
+
+declare(strict_types=1);
+
+$vehicleTypes = is_array($vehicleTypes ?? null) ? $vehicleTypes : [];
+$flashOld = $_SESSION['flash_old'] ?? [];
+unset($_SESSION['flash_old']);
+?>
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">VEHICLE BOOKING</h1>
+    <p class="hero-sub js-reveal">Book rides and rentals with real-time price preview.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="vehicle-booking-card js-reveal" id="vehicleBookingRoot" data-map-api-key="<?= e((string) ($mapApiKey ?? '')) ?>">
+      <div class="vehicle-booking-head">
+        <h2>Book Your Vehicle</h2>
+        <p>Car / Van / Bike / SUV / Luxury rides and rentals.</p>
+      </div>
+      <form method="post" action="<?= e(base_url('/vehicle-booking/create')) ?>" id="vehicleBookingForm" class="vehicle-booking-form" novalidate>
+        <?= csrf_field() ?>
+        <div class="vehicle-booking-grid">
+          <div class="vehicle-booking-field vehicle-booking-field--full">
+            <label>Pickup Location *</label>
+            <div class="vb-autocomplete" id="vb_pickup_wrap">
+              <input class="form-control vb-autocomplete-input" name="pickup_location" id="vb_pickup" required value="<?= e((string) ($flashOld['pickup_location'] ?? '')) ?>" placeholder="Enter pickup location" autocomplete="off" />
+              <button type="button" class="vb-autocomplete-clear" id="vb_pickup_clear" aria-label="Clear pickup location">×</button>
+              <span class="vb-autocomplete-spinner" id="vb_pickup_loading" aria-hidden="true"></span>
+              <div class="vb-autocomplete-menu" id="vb_pickup_menu" role="listbox" aria-label="Pickup suggestions"></div>
+            </div>
+            <input type="hidden" name="pickup_lat" id="vb_pickup_lat" />
+            <input type="hidden" name="pickup_lng" id="vb_pickup_lng" />
+          </div>
+          <div class="vehicle-booking-field vehicle-booking-field--full">
+            <label>Drop Location</label>
+            <div class="vb-autocomplete" id="vb_drop_wrap">
+              <input class="form-control vb-autocomplete-input" name="drop_location" id="vb_drop" value="<?= e((string) ($flashOld['drop_location'] ?? '')) ?>" placeholder="Enter drop location" autocomplete="off" />
+              <button type="button" class="vb-autocomplete-clear" id="vb_drop_clear" aria-label="Clear drop location">×</button>
+              <span class="vb-autocomplete-spinner" id="vb_drop_loading" aria-hidden="true"></span>
+              <div class="vb-autocomplete-menu" id="vb_drop_menu" role="listbox" aria-label="Drop suggestions"></div>
+            </div>
+            <input type="hidden" name="drop_lat" id="vb_drop_lat" />
+            <input type="hidden" name="drop_lng" id="vb_drop_lng" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Pickup Date & Time *</label>
+            <input class="form-control js-vb-datetime" type="text" name="pickup_datetime" id="vb_pickup_dt" required value="<?= e((string) ($flashOld['pickup_datetime'] ?? '')) ?>" placeholder="DD/MM/YYYY hh:mm AM/PM" />
+          </div>
+          <div class="vehicle-booking-field" id="vb_return_wrap">
+            <label>Return Date & Time</label>
+            <input class="form-control js-vb-datetime" type="text" name="return_datetime" id="vb_return_dt" value="<?= e((string) ($flashOld['return_datetime'] ?? '')) ?>" placeholder="DD/MM/YYYY hh:mm AM/PM" />
+          </div>
+          <div class="vehicle-booking-field vehicle-booking-field--full">
+            <div class="vb-datetime-quick" role="group" aria-label="Quick date and time">
+              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_now">Now</button>
+              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_plus1">+1 Hour</button>
+              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_tomorrow">Tomorrow</button>
+            </div>
+            <div class="vb-datetime-error" id="vb_datetime_error" aria-live="polite"></div>
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Vehicle Type *</label>
+            <select class="form-select" name="vehicle_type" id="vb_vehicle_type" required>
+              <?php foreach ($vehicleTypes as $vt): ?>
+                <option value="<?= e((string) ($vt['id'] ?? 'car')) ?>"><?= e((string) ($vt['label'] ?? 'Car')) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Trip Type *</label>
+            <select class="form-select" name="trip_type" id="vb_trip_type" required>
+              <option value="one_way">One-way</option>
+              <option value="round_trip">Round trip</option>
+              <option value="rental">Rental</option>
+            </select>
+          </div>
+          <div class="vehicle-booking-field" id="vb_rental_unit_wrap">
+            <label>Rental Type</label>
+            <select class="form-select" name="rental_unit" id="vb_rental_unit">
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+            </select>
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Passengers</label>
+            <input class="form-control" type="number" min="1" name="passenger_count" id="vb_passenger_count" value="<?= e((string) ($flashOld['passenger_count'] ?? '1')) ?>" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Luggage</label>
+            <input class="form-control" type="number" min="0" name="luggage_count" id="vb_luggage_count" value="<?= e((string) ($flashOld['luggage_count'] ?? '0')) ?>" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Name *</label>
+            <input class="form-control" name="customer_name" id="vb_customer_name" required value="<?= e((string) ($flashOld['customer_name'] ?? '')) ?>" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Phone Number *</label>
+            <input class="form-control" name="customer_phone" id="vb_customer_phone" required value="<?= e((string) ($flashOld['customer_phone'] ?? '')) ?>" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Email</label>
+            <input class="form-control" type="email" name="customer_email" id="vb_customer_email" value="<?= e((string) ($flashOld['customer_email'] ?? '')) ?>" />
+          </div>
+          <div class="vehicle-booking-field">
+            <label>Coupon</label>
+            <input class="form-control" name="coupon_code" id="vb_coupon_code" placeholder="WELCOME10 / FLAT500" />
+          </div>
+          <div class="vehicle-booking-field vehicle-booking-field--full">
+            <label>Special Notes</label>
+            <textarea class="form-control" rows="3" name="customer_notes" id="vb_customer_notes"><?= e((string) ($flashOld['customer_notes'] ?? '')) ?></textarea>
+          </div>
+        </div>
+
+        <input type="hidden" name="distance_km" id="vb_distance_km" value="0" />
+        <input type="hidden" name="duration_minutes" id="vb_duration_minutes" value="0" />
+        <input type="hidden" name="estimated_total" id="vb_estimated_total" value="0" />
+        <input type="hidden" name="pricing_breakdown_json" id="vb_pricing_json" value="{}" />
+
+        <div class="vehicle-booking-actions">
+          <button type="button" class="btn btn-outline-light" id="vb_preview_btn">Preview Price</button>
+          <button type="submit" class="btn btn-cta" id="vb_submit_btn">Book Now</button>
+        </div>
+      </form>
+
+      <div class="vehicle-booking-preview" id="vb_preview" hidden>
+        <h3>Price Breakdown</h3>
+        <div class="vehicle-booking-breakdown" id="vb_breakdown"></div>
+        <div class="vehicle-booking-available">
+          <h4>Available Vehicles</h4>
+          <div id="vb_available_list" class="vehicle-booking-available-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

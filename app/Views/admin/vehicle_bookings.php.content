@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+$filters = is_array($filters ?? null) ? $filters : [];
+$items = $items ?? [];
+$vehicles = $vehicles ?? [];
+$drivers = $drivers ?? [];
+$statusCounts = is_array($statusCounts ?? null) ? $statusCounts : [];
+$page = (int) ($page ?? 1);
+$pageCount = (int) ($pageCount ?? 1);
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$schemaReady = (bool) ($schemaReady ?? true);
+?>
+<template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?>
+        <div class="alert alert-warning mb-0">Booking tables are not ready. Run <code>php database/migrate.php</code>.</div>
+      <?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Booking Filters</h2>
+        </div>
+        <div class="sf-card-body">
+          <form class="row g-2" method="get" action="<?= e(base_url('/admin/vehicle-bookings')) ?>">
+            <div class="col-12 col-md-3"><input class="form-control" name="q" value="<?= e((string) ($filters['q'] ?? '')) ?>" placeholder="Ref / name / phone" /></div>
+            <div class="col-6 col-md-2">
+              <select class="form-select" name="status">
+                <option value="">All status</option>
+                <?php foreach (['pending','confirmed','assigned','on_trip','completed','cancelled'] as $s): ?>
+                  <option value="<?= e($s) ?>" <?= (string) ($filters['status'] ?? '') === $s ? 'selected' : '' ?>><?= e($s) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-6 col-md-2">
+              <select class="form-select" name="vehicle_type">
+                <option value="">All types</option>
+                <?php foreach (['car','van','suv','bike','luxury'] as $vt): ?>
+                  <option value="<?= e($vt) ?>" <?= (string) ($filters['vehicle_type'] ?? '') === $vt ? 'selected' : '' ?>><?= e($vt) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-6 col-md-2"><input class="form-control" type="date" name="from" value="<?= e((string) ($filters['from'] ?? '')) ?>" /></div>
+            <div class="col-6 col-md-2"><input class="form-control" type="date" name="to" value="<?= e((string) ($filters['to'] ?? '')) ?>" /></div>
+            <div class="col-12 col-md-1"><button class="btn btn-outline-light w-100" type="submit">Go</button></div>
+          </form>
+          <div class="mt-2 small text-white-50">
+            <?php foreach (['pending','confirmed','assigned','on_trip','completed','cancelled'] as $k): ?>
+              <span class="me-3"><?= e($k) ?>: <strong><?= (int) ($statusCounts[$k] ?? 0) ?></strong></span>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="sf-card">
+        <div class="sf-card-header"><h2 class="sf-card-title">Create Booking</h2></div>
+        <div class="sf-card-body">
+          <form method="post" action="<?= e(base_url('/admin/vehicle-bookings/create')) ?>">
+            <?= csrf_field() ?>
+            <select class="form-select mb-2" name="trip_type"><option value="one_way">One-way</option><option value="round_trip">Round trip</option><option value="rental">Rental</option></select>
+            <select class="form-select mb-2" name="vehicle_type"><option value="car">Car</option><option value="van">Van</option><option value="suv">SUV</option><option value="bike">Bike</option><option value="luxury">Luxury</option></select>
+            <input class="form-control mb-2" name="pickup_location" placeholder="Pickup location" required />
+            <input class="form-control mb-2" name="drop_location" placeholder="Drop location (optional)" />
+            <div class="row g-2 mb-2">
+              <div class="col-6"><input class="form-control" type="datetime-local" name="pickup_datetime" required /></div>
+              <div class="col-6"><input class="form-control" type="datetime-local" name="return_datetime" /></div>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-6"><input class="form-control" type="number" min="1" name="passenger_count" value="1" placeholder="Passengers" /></div>
+              <div class="col-6"><input class="form-control" type="number" min="0" name="luggage_count" value="0" placeholder="Luggage" /></div>
+            </div>
+            <input class="form-control mb-2" name="customer_name" placeholder="Customer name" required />
+            <input class="form-control mb-2" name="customer_phone" placeholder="Phone" required />
+            <input class="form-control mb-2" name="customer_email" type="email" placeholder="Email (optional)" />
+            <textarea class="form-control mb-2" rows="3" name="customer_notes" placeholder="Notes"></textarea>
+            <div class="row g-2 mb-2">
+              <div class="col-6"><input class="form-control" type="number" name="distance_km" step="0.01" placeholder="Distance km" value="0" /></div>
+              <div class="col-6"><input class="form-control" type="number" name="duration_minutes" min="0" placeholder="Duration min" value="0" /></div>
+            </div>
+            <input class="form-control mb-2" type="number" name="estimated_total" step="0.01" placeholder="Estimated total" value="0" />
+            <button class="btn btn-primary w-100" type="submit">Save Booking</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-8">
+      <div class="sf-card">
+        <div class="sf-card-header"><h2 class="sf-card-title">All Bookings</h2></div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead><tr><th>Booking</th><th>Trip</th><th>Pickup</th><th>Total</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+              <tbody>
+                <?php if ($items === []): ?><tr><td colspan="6" class="text-white-50">No bookings yet.</td></tr><?php endif; ?>
+                <?php foreach ($items as $b): ?>
+                  <tr>
+                    <td><strong><?= e((string) ($b['booking_ref'] ?? '')) ?></strong><div class="small text-white-50"><?= e((string) ($b['customer_name'] ?? '')) ?> / <?= e((string) ($b['customer_phone'] ?? '')) ?></div></td>
+                    <td><?= e((string) ($b['trip_type'] ?? '')) ?> / <?= e((string) ($b['vehicle_type'] ?? '')) ?></td>
+                    <td><?= e((string) ($b['pickup_location'] ?? '')) ?><div class="small text-white-50"><?= e((string) ($b['pickup_datetime'] ?? '')) ?></div></td>
+                    <td><?= e((string) ($b['currency_code'] ?? 'LKR')) ?> <?= e(number_format((float) ($b['estimated_total'] ?? 0), 2)) ?></td>
+                    <td><?= e((string) ($b['status'] ?? 'pending')) ?></td>
+                    <td class="text-end">
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/vehicle-bookings/status')) ?>">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) ($b['id'] ?? 0) ?>" />
+                        <input type="hidden" name="status" value="confirmed" />
+                        <button class="btn btn-outline-light btn-sm" type="submit">Confirm</button>
+                      </form>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/vehicle-bookings/assign')) ?>">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) ($b['id'] ?? 0) ?>" />
+                        <select class="form-select form-select-sm d-inline-block" name="vehicle_id" style="width:120px">
+                          <option value="">Vehicle</option>
+                          <?php foreach ($vehicles as $v): ?><option value="<?= (int) ($v['id'] ?? 0) ?>"><?= e((string) ($v['name'] ?? '')) ?></option><?php endforeach; ?>
+                        </select>
+                        <select class="form-select form-select-sm d-inline-block" name="driver_id" style="width:120px">
+                          <option value="">Driver</option>
+                          <?php foreach ($drivers as $d): ?><option value="<?= (int) ($d['id'] ?? 0) ?>"><?= e((string) ($d['name'] ?? '')) ?></option><?php endforeach; ?>
+                        </select>
+                        <button class="btn btn-outline-light btn-sm" type="submit">Assign</button>
+                      </form>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/vehicle-bookings/delete')) ?>" onsubmit="return confirm('Delete this booking?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) ($b['id'] ?? 0) ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                      </form>
+                      <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/vehicle-booking/invoice/' . rawurlencode((string) ($b['booking_ref'] ?? '')))) ?>" target="_blank" rel="noopener">Invoice</a>
+                      <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/vehicle-booking/tracker/' . rawurlencode((string) ($b['booking_ref'] ?? '')))) ?>" target="_blank" rel="noopener">Track</a>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if ($pageCount > 1): ?>
+            <nav class="mt-3"><ul class="pagination pagination-sm mb-0">
+              <?php for ($p = 1; $p <= $pageCount; $p++): ?>
+                <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                  <a class="page-link" href="<?= e(base_url('/admin/vehicle-bookings?page=' . $p)) ?>"><?= $p ?></a>
+                </li>
+              <?php endfor; ?>
+            </ul></nav>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+$bookingRef = (string) ($bookingRef ?? '');
+?>
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">LIVE TRACKING</h1>
+    <p class="hero-sub js-reveal">Booking reference: <?= e($bookingRef) ?></p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="glass-card p-4" id="tripTrackerRoot" data-ref="<?= e($bookingRef) ?>">
+      <h2 class="h4 mb-3">Trip progress</h2>
+      <div class="mb-3" id="tripTrackerStatus">Loading...</div>
+      <div class="progress mb-3" role="progressbar" aria-label="Trip progress">
+        <div class="progress-bar" id="tripTrackerProgress" style="width:0%">0%</div>
+      </div>
+      <div class="small text-secondary mb-3" id="tripTrackerCoords">Coordinates: -</div>
+      <a class="btn btn-outline-primary rounded-pill" href="<?= e(base_url('/vehicle-booking/history')) ?>">Back to history</a>
+    </div>
+  </div>
+</section>

@@ -21,7 +21,7 @@ final class SeoController extends BaseController
         }
 
         $urls = [
-            '/', '/about', '/contact', '/visas', '/flights', '/hotels', '/insurance', '/destinations', '/blog'
+            '/', '/about', '/contact', '/quote', '/vehicle-booking', '/visas', '/flights', '/hotels', '/insurance', '/destinations', '/blog'
         ];
 
         $dest = Destination::search('', 500);

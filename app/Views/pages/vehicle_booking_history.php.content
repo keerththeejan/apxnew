@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+$phone = (string) ($phone ?? '');
+$bookings = $bookings ?? [];
+?>
+<section class="hero hero-generic">
+  <div class="container hero-inner">
+    <h1 class="hero-title js-reveal">BOOKING HISTORY</h1>
+    <p class="hero-sub js-reveal">Check your vehicle bookings by phone number.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="glass-card p-4">
+      <form method="get" action="<?= e(base_url('/vehicle-booking/history')) ?>" class="row g-2 mb-3">
+        <div class="col-12 col-md-9"><input class="form-control" name="phone" value="<?= e($phone) ?>" placeholder="Enter your phone number" /></div>
+        <div class="col-12 col-md-3"><button class="btn btn-cta w-100" type="submit">Search</button></div>
+      </form>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th>Ref</th><th>Trip</th><th>Pickup</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            <?php if ($bookings === []): ?><tr><td colspan="5" class="text-secondary">No bookings found.</td></tr><?php endif; ?>
+            <?php foreach ($bookings as $b): ?>
+              <tr>
+                <td><?= e((string) ($b['booking_ref'] ?? '')) ?></td>
+                <td><?= e((string) ($b['trip_type'] ?? '')) ?> / <?= e((string) ($b['vehicle_type'] ?? '')) ?></td>
+                <td><?= e((string) ($b['pickup_location'] ?? '')) ?><div class="small text-secondary"><?= e((string) ($b['pickup_datetime'] ?? '')) ?></div></td>
+                <td><?= e((string) ($b['currency_code'] ?? 'LKR')) ?> <?= e(number_format((float) ($b['estimated_total'] ?? 0), 2)) ?></td>
+                <td><?= e((string) ($b['status'] ?? 'pending')) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

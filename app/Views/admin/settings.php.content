@@ -193,6 +193,13 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
+                    <input type="hidden" name="vehicle_booking_module_enabled" value="0" />
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="vehicle_booking_module_enabled" id="setVehicleBookingEnabled" value="1" <?= $v('vehicle_booking_module_enabled', '1') === '1' ? 'checked' : '' ?> />
+                      <label class="form-check-label fw-bold" for="setVehicleBookingEnabled">Enable Vehicle Booking module</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
                     <label class="form-label fw-bold">Clock time format</label>
                     <?php $cf = $v('clock_time_format', '24'); ?>
                     <select class="form-select" name="clock_time_format">

@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-return new class {
-    public function up(\PDO $pdo): void
-    {
+return [
+    'up' => function (PDO $pdo): void {
         try {
             $pdo->exec('ALTER TABLE applications ADD COLUMN whatsapp_number VARCHAR(30) NULL AFTER phone');
         } catch (\Throwable $e) {
@@ -39,10 +38,8 @@ return new class {
                 KEY idx_whatsapp_logs_created (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         );
-    }
-
-    public function down(\PDO $pdo): void
-    {
+    },
+    'down' => function (PDO $pdo): void {
         try {
             $pdo->exec('ALTER TABLE applications DROP COLUMN country_code');
         } catch (\Throwable $e) {
@@ -60,6 +57,5 @@ return new class {
         } catch (\Throwable $e) {
         }
         $pdo->exec('DROP TABLE IF EXISTS whatsapp_logs');
-    }
-};
-
+    },
+];

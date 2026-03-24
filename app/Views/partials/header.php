@@ -52,6 +52,46 @@ $waNumber = (string) ($settings['whatsapp_number'] ?? '');
 $waDigits = preg_replace('/\D/', '', $waNumber) ?? '';
 $navLinks = $navMenu['links'] ?? [];
 $navCtas = $navMenu['ctas'] ?? [];
+
+/** When nav_items is empty or missing, show a standard primary menu so the bar is never blank. */
+if ($navLinks === []) {
+    $navLinks = [
+        ['id' => 0, 'label' => 'Flight Ticket', 'url' => '/flights', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'About', 'url' => '/about', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Contact', 'url' => '/contact', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Get a quote', 'url' => '/quote', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Vehicle booking', 'url' => '/vehicle-booking', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Visa', 'url' => '/visas', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Finance', 'url' => '/flights#finance', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Insurance', 'url' => '/insurance', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'Hotel', 'url' => '/hotels', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+        ['id' => 0, 'label' => 'News', 'url' => '/blog', 'open_new_tab' => 0, 'icon' => null, 'children' => []],
+    ];
+}
+
+// Ensure Vehicle booking link is visible even when nav_items exists but lacks it.
+$vehicleModuleEnabled = (($settings['vehicle_booking_module_enabled'] ?? '1') === '1');
+if ($vehicleModuleEnabled) {
+    $hasVehicleNav = false;
+    foreach ($navLinks as $nl) {
+        $u = strtolower(trim((string) ($nl['url'] ?? '')));
+        if ($u === '/vehicle-booking' || $u === 'vehicle-booking' || $u === '/vehicle-booking/') {
+            $hasVehicleNav = true;
+            break;
+        }
+    }
+    if (!$hasVehicleNav) {
+        $navLinks[] = [
+            'id' => 0,
+            'label' => 'Vehicle booking',
+            'url' => '/vehicle-booking',
+            'open_new_tab' => 0,
+            'icon' => null,
+            'children' => [],
+        ];
+    }
+}
+
 if ($navCtas === []) {
     $navCtas = [
         [
@@ -116,7 +156,7 @@ if ($navCtas === []) {
       <div id="navbar-menu" class="navbar-menu navbar-collapse">
         <nav class="primary-nav" aria-label="Primary">
         <ul class="primary-links navbar-nav mb-0 align-items-lg-center flex-column flex-lg-row">
-          <?php foreach ($navLinks as $item): ?>
+          <?php foreach ($navLinks as $navIndex => $item): ?>
             <?php
               $children = $item['children'] ?? [];
               $hasChildren = is_array($children) && $children !== [];
@@ -127,10 +167,11 @@ if ($navCtas === []) {
             ?>
             <?php if ($hasChildren): ?>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle<?= $branchOn ? ' is-active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="nav-dd-<?= (int) ($item['id'] ?? 0) ?>">
+                <?php $navDdId = ((int) ($item['id'] ?? 0) > 0) ? (int) ($item['id'] ?? 0) : ($navIndex + 1); ?>
+                <a class="nav-link dropdown-toggle<?= $branchOn ? ' is-active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="nav-dd-<?= $navDdId ?>">
                   <?= apx_nav_icon_html(isset($item['icon']) ? (string) $item['icon'] : null, (string) ($item['label'] ?? '')) ?><?= e((string) ($item['label'] ?? '')) ?>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" aria-labelledby="nav-dd-<?= (int) ($item['id'] ?? 0) ?>">
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow" aria-labelledby="nav-dd-<?= $navDdId ?>">
                   <?php foreach ($children as $child): ?>
                     <?php
                       $chref = resolve_public_href((string) ($child['url'] ?? '/'));

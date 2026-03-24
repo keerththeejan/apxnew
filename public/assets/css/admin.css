@@ -202,3 +202,169 @@ a{color:inherit;}
 .ts-wrapper.plugin-clear_button .ts-control .clear-button{
   color:var(--sf-muted);
 }
+
+/* Country picker: crisp flags + readable text on any Tom Select / Bootstrap theme */
+.sf-flag-thumb{
+  width:28px;
+  height:18px;
+  object-fit:cover;
+  border:1px solid rgba(148,163,184,.45);
+  box-shadow:0 0 0 1px rgba(0,0,0,.06) inset;
+}
+.sf-flag-thumb--sm{
+  width:22px;
+  height:15px;
+}
+.sf-ts-country-dropdown.ts-dropdown{
+  background:rgba(15,27,51,.98)!important;
+  border:1px solid var(--sf-border)!important;
+  color:var(--sf-text)!important;
+  box-shadow:0 14px 44px rgba(0,0,0,.4)!important;
+}
+.sf-ts-country-dropdown .option{
+  color:var(--sf-text)!important;
+}
+.sf-ts-country-dropdown .option:hover,
+.sf-ts-country-dropdown .option.active,
+.sf-ts-country-dropdown .option.selected{
+  background:rgba(79,140,255,.28)!important;
+  color:#fff!important;
+}
+.sf-ts-country-dropdown .sf-ts-country-name,
+.sf-ts-country-dropdown .sf-ts-country-code{
+  color:inherit!important;
+}
+.sf-ts-country-dropdown .sf-ts-country-code{
+  opacity:.75;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+.sf-ts-country-dropdown .option:hover .sf-ts-country-code,
+.sf-ts-country-dropdown .option.active .sf-ts-country-code{
+  opacity:1;
+  color:#fff!important;
+}
+.sf-ts-country-placeholder{
+  color:var(--sf-muted)!important;
+}
+.modal .sf-ts-country-dropdown .option{
+  color:var(--sf-text)!important;
+}
+
+/* === Admin responsive hardening === */
+html, body{
+  max-width:100%;
+  overflow-x:hidden;
+}
+*,
+*::before,
+*::after{
+  box-sizing:border-box;
+}
+img, svg, video, canvas{
+  max-width:100%;
+  height:auto;
+}
+
+.sf-content,
+.sf-main{
+  width:100%;
+  overflow-x:hidden;
+}
+
+/* 1200px+ */
+@media (min-width: 1200px){
+  .sf-topbar-inner,
+  .sf-main{
+    max-width:1200px;
+  }
+}
+
+/* <=1024px laptop */
+@media (max-width: 1024px){
+  .sf-topbar-inner{
+    padding:10px 12px;
+  }
+  .sf-main{
+    padding:14px 12px 22px;
+  }
+  .sf-card-body{
+    padding:14px;
+  }
+}
+
+/* <=768px tablet */
+@media (max-width: 768px){
+  .sf-topbar-inner{
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+  .sf-page-title{
+    font-size:15px;
+  }
+  .sf-breadcrumb{
+    font-size:11px;
+  }
+
+  .sf-card-header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+
+  .sf-main form .form-control,
+  .sf-main form .form-select{
+    width:100%;
+    min-height:44px;
+  }
+
+  .sf-main .btn{
+    min-height:42px;
+  }
+
+  .sf-main .table-responsive{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .sf-main table{
+    min-width:680px;
+  }
+}
+
+/* <=576px mobile */
+@media (max-width: 576px){
+  .sf-main{
+    padding:12px 10px 20px;
+  }
+  .sf-nav{
+    padding:10px;
+  }
+  .sf-nav .nav-link{
+    padding:11px 10px;
+    font-size:12px;
+  }
+
+  .sf-main .row{
+    --bs-gutter-x:0.75rem;
+    --bs-gutter-y:0.75rem;
+  }
+
+  /* Mobile-first actions */
+  .sf-main .d-flex{
+    flex-wrap:wrap;
+  }
+  .sf-main .d-flex > .btn,
+  .sf-main .d-flex > a.btn,
+  .sf-main .d-flex > button.btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  /* Table fallback for any non-wrapped table */
+  .sf-main table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+    min-width:640px;
+  }
+}

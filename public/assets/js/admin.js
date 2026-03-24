@@ -40,6 +40,14 @@
       { key:'insurance', label:'Insurance Plans', icon:'bi-shield-check', href: adminUrl('/admin/insurance') },
       { key:'blog', label:'Blog / News', icon:'bi-newspaper', href: adminUrl('/admin/blog') },
       { key:'enquiries', label:'Enquiries', icon:'bi-chat-dots', href: adminUrl('/admin/enquiries') },
+      { key:'quotes', label:'Quote management', icon:'bi-calculator', href: adminUrl('/admin/quotes') },
+      { key:'vehicles', label:'Vehicles', icon:'bi-truck', href: adminUrl('/admin/vehicles') },
+      { key:'drivers', label:'Drivers', icon:'bi-person-badge', href: adminUrl('/admin/drivers') },
+      { key:'vehicle_pricing', label:'Vehicle pricing', icon:'bi-currency-dollar', href: adminUrl('/admin/vehicle-pricing') },
+      { key:'vehicle_bookings', label:'Vehicle bookings', icon:'bi-car-front', href: adminUrl('/admin/vehicle-bookings') },
+      { key:'vehicle_analytics', label:'Vehicle analytics', icon:'bi-graph-up-arrow', href: adminUrl('/admin/vehicle-analytics') },
+      { key:'vehicle_availability', label:'Vehicle availability', icon:'bi-calendar-week', href: adminUrl('/admin/vehicle-availability') },
+      { key:'vehicle_maintenance', label:'Vehicle maintenance', icon:'bi-wrench-adjustable-circle', href: adminUrl('/admin/vehicle-maintenance') },
       { key:'applications', label:'Applications', icon:'bi-inboxes', href: adminUrl('/admin/applications') },
       { key:'users', label:'Users', icon:'bi-people', href: adminUrl('/admin/users') },
       { key:'settings', label:'Settings', icon:'bi-gear', href: adminUrl('/admin/settings') },
@@ -48,6 +56,10 @@
     if (role === 'staff') {
       menu = menu.filter(function(m){
         return m.key !== 'settings' && m.key !== 'users';
+      });
+    } else if (role === 'driver') {
+      menu = menu.filter(function(m){
+        return m.key === 'dashboard' || m.key === 'vehicle_bookings' || m.key === 'logout';
       });
     }
     return menu;
@@ -389,10 +401,11 @@
       });
     }
 
-    function flagUrlForCode(code){
+    function flagUrlForCode(code, width){
       var c = String(code || '').toLowerCase();
       if (!c) return '';
-      return 'https://flagcdn.com/w40/' + c + '.png';
+      var w = width || 80;
+      return 'https://flagcdn.com/w' + w + '/' + c + '.png';
     }
 
     if (countrySel) {
@@ -403,31 +416,34 @@
           create: false,
           plugins: ['clear_button'],
           placeholder: 'Select Country',
+          dropdownClass: 'sf-ts-country-dropdown',
           render: {
             option: function(data, escape){
               var code = (data.value || '').toLowerCase();
               if (!code) {
-                return '<div class="px-2 py-1 text-white-50">Select Country</div>';
+                return '<div class="px-2 py-1 sf-ts-country-placeholder">Select Country</div>';
               }
-              var u = flagUrlForCode(code);
+              var u40 = flagUrlForCode(code, 40);
+              var u80 = flagUrlForCode(code, 80);
               return (
-                '<div class="d-flex align-items-center gap-2 py-1 px-1">'
-                  + '<img src="'+u+'" alt="" width="28" height="18" class="rounded border border-secondary flex-shrink-0" style="object-fit:cover"/>'
-                  + '<span class="flex-grow-1 text-truncate">'+escape(data.text)+'</span>'
-                  + '<span class="text-white-50 small flex-shrink-0">'+escape(data.value)+'</span>'
+                '<div class="d-flex align-items-center gap-2 py-1 px-1 sf-ts-country-row">'
+                  + '<img src="'+u80+'" srcset="'+u40+' 1x, '+u80+' 2x" alt="" width="28" height="18" class="sf-flag-thumb rounded flex-shrink-0" loading="lazy" decoding="async" />'
+                  + '<span class="flex-grow-1 text-truncate sf-ts-country-name">'+escape(data.text)+'</span>'
+                  + '<span class="small flex-shrink-0 sf-ts-country-code">'+escape(data.value)+'</span>'
                 + '</div>'
               );
             },
             item: function(data, escape){
               var code = (data.value || '').toLowerCase();
               if (!code) {
-                return '<div class="text-white-50">Select Country</div>';
+                return '<div class="sf-ts-country-placeholder">Select Country</div>';
               }
-              var u = flagUrlForCode(code);
+              var u40 = flagUrlForCode(code, 40);
+              var u80 = flagUrlForCode(code, 80);
               return (
-                '<div class="d-flex align-items-center gap-2">'
-                  + '<img src="'+u+'" alt="" width="22" height="15" class="rounded border border-secondary flex-shrink-0" style="object-fit:cover"/>'
-                  + '<span class="text-truncate">'+escape(data.text)+'</span>'
+                '<div class="d-flex align-items-center gap-2 sf-ts-country-item">'
+                  + '<img src="'+u80+'" srcset="'+u40+' 1x, '+u80+' 2x" alt="" width="22" height="15" class="sf-flag-thumb sf-flag-thumb--sm rounded flex-shrink-0" loading="lazy" decoding="async" />'
+                  + '<span class="text-truncate sf-ts-country-name">'+escape(data.text)+'</span>'
                 + '</div>'
               );
             }

@@ -54,6 +54,20 @@ final class PageController extends BaseController
         ]);
     }
 
+    public function quote(): void
+    {
+        view('pages.quote', [
+            'title' => 'Get a quote',
+            'metaDescription' => 'Request a shipping price quote by country, service, and weight.',
+            'page' => [
+                'title' => 'Get a quote',
+                'content' => '',
+                'meta_title' => null,
+                'meta_description' => null,
+            ],
+        ]);
+    }
+
     public function visas(): void
     {
         $page = Page::findByKey('visas');

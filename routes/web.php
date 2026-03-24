@@ -9,6 +9,7 @@ use App\Controllers\BookingController;
 use App\Controllers\SeoController;
 use App\Controllers\ApplicationController;
 use App\Controllers\ContactMessageController;
+use App\Controllers\VehicleBookingController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/visa.html', [PageController::class, 'visaHtmlRedirect']);
@@ -16,6 +17,16 @@ $router->get('/settings.html', [PageController::class, 'settingsHtmlRedirect']);
 $router->get('/sitemap.xml', [SeoController::class, 'sitemap']);
 $router->get('/about', [PageController::class, 'about']);
 $router->get('/contact', [PageController::class, 'contact']);
+$router->get('/quote', [PageController::class, 'quote']);
+$router->get('/vehicle-booking', [VehicleBookingController::class, 'index']);
+$router->post('/vehicle-booking/quote', [VehicleBookingController::class, 'quote']);
+$router->post('/vehicle-booking/check-availability', [VehicleBookingController::class, 'checkAvailability']);
+$router->post('/vehicle-booking/create', [VehicleBookingController::class, 'create']);
+$router->post('/vehicle-booking/verify-otp', [VehicleBookingController::class, 'verifyOtp']);
+$router->get('/vehicle-booking/history', [VehicleBookingController::class, 'history']);
+$router->get('/vehicle-booking/invoice/{ref}', [VehicleBookingController::class, 'invoice']);
+$router->get('/vehicle-booking/tracking/{ref}', [VehicleBookingController::class, 'tracking']);
+$router->get('/vehicle-booking/tracker/{ref}', [VehicleBookingController::class, 'tracker']);
 
 $router->get('/visas', [PageController::class, 'visas']);
 $router->get('/flights', [PageController::class, 'flights']);

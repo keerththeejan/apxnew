@@ -1,0 +1,201 @@
+<?php
+
+declare(strict_types=1);
+
+$items = $items ?? [];
+$flashSuccess = $flashSuccess ?? null;
+$flashError = $flashError ?? null;
+$schemaReady = (bool) ($schemaReady ?? true);
+
+?><template id="page-content">
+  <div class="row g-3">
+    <div class="col-12">
+      <?php if (!$schemaReady): ?>
+        <div class="alert alert-warning mb-0">
+          The <code>quote_routes</code> table is not created yet. From the project folder run: <code>php database/migrate.php</code>
+          (WAMP: use the full path to <code>php.exe</code> under <code>C:\wamp64\bin\php\…</code>).
+        </div>
+      <?php endif; ?>
+      <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
+      <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
+    </div>
+
+    <div class="col-12 col-xl-5">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Add route</h2>
+          <div class="sf-card-meta">Country, carrier, and price per kg for the public quote widget</div>
+        </div>
+        <div class="sf-card-body">
+          <?php if ($schemaReady): ?>
+          <form method="post" action="<?= e(base_url('/admin/quotes/create')) ?>">
+            <?= csrf_field() ?>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Display label</label>
+              <input class="form-control" name="label" placeholder="USA – DHL" />
+              <div class="form-text text-white-50">Shown in the dropdown. Leave blank to build from country + service.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Slug <span class="text-white-50 fw-normal">(optional)</span></label>
+              <input class="form-control" name="slug" placeholder="usa-dhl" pattern="[a-z0-9\-]+" autocomplete="off" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Country *</label>
+              <input class="form-control" name="country" placeholder="USA" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Service *</label>
+              <input class="form-control" name="service" placeholder="DHL" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Price per kg (LKR) *</label>
+              <input class="form-control" type="number" name="price_per_kg" min="0" step="0.01" value="0" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Sort order</label>
+              <input class="form-control" type="number" name="sort_order" value="0" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Status</label>
+              <select class="form-select" name="is_active">
+                <option value="1" selected>Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-save me-2"></i>Save route</button>
+          </form>
+          <?php else: ?>
+            <p class="text-white-50 mb-0">Run migrations to enable editing.</p>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-7">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Quote routes</h2>
+          <div class="sf-card-meta">These options power <code>/quote</code> and the contact page widget</div>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Label</th>
+                  <th>Country</th>
+                  <th>Service</th>
+                  <th class="text-end">LKR / kg</th>
+                  <th>Active</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($items === []): ?>
+                  <tr><td colspan="6" class="text-white-50">No routes yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($items as $row): ?>
+                  <?php
+                    $id = (int) ($row['id'] ?? 0);
+                    $label = (string) ($row['label'] ?? '');
+                    $slug = (string) ($row['slug'] ?? '');
+                    $country = (string) ($row['country'] ?? '');
+                    $service = (string) ($row['service'] ?? '');
+                    $price = (float) ($row['price_per_kg'] ?? 0);
+                    $sort = (int) ($row['sort_order'] ?? 0);
+                    $active = (int) ($row['is_active'] ?? 0) === 1;
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?= e($label) ?><div class="small text-white-50 font-monospace"><?= e($slug) ?></div></td>
+                    <td><?= e($country) ?></td>
+                    <td><?= e($service) ?></td>
+                    <td class="text-end"><?= e(number_format($price, 2)) ?></td>
+                    <td><?= $active ? '<span class="badge text-bg-success">Yes</span>' : '<span class="badge text-bg-secondary">No</span>' ?></td>
+                    <td class="text-end">
+                      <?php if ($schemaReady): ?>
+                      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#quoteRouteModal" data-mode="edit"
+                        data-id="<?= (int) $id ?>"
+                        data-slug="<?= e($slug) ?>"
+                        data-label="<?= e($label) ?>"
+                        data-country="<?= e($country) ?>"
+                        data-service="<?= e($service) ?>"
+                        data-price="<?= e((string) $price) ?>"
+                        data-sort="<?= (int) $sort ?>"
+                        data-active="<?= $active ? '1' : '0' ?>"
+                        aria-label="Edit"><i class="bi bi-pencil"></i></button>
+                      <form class="d-inline" method="post" action="<?= e(base_url('/admin/quotes/delete')) ?>" onsubmit="return confirm('Delete this route?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int) $id ?>" />
+                        <button class="btn btn-outline-light btn-sm" type="submit" aria-label="Delete"><i class="bi bi-trash"></i></button>
+                      </form>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="quoteRouteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Quote route</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" action="<?= e(base_url('/admin/quotes/create')) ?>" id="quoteRouteForm">
+          <?= csrf_field() ?>
+          <input type="hidden" name="id" id="qr_id" value="" />
+          <div class="modal-body">
+            <div class="row g-2">
+              <div class="col-12"><label class="form-label">Display label</label><input class="form-control" name="label" id="qr_label" /></div>
+              <div class="col-12"><label class="form-label">Slug</label><input class="form-control" name="slug" id="qr_slug" placeholder="auto if empty" pattern="[a-z0-9\-]*" /></div>
+              <div class="col-md-6"><label class="form-label">Country *</label><input class="form-control" name="country" id="qr_country" required /></div>
+              <div class="col-md-6"><label class="form-label">Service *</label><input class="form-control" name="service" id="qr_service" required /></div>
+              <div class="col-md-6"><label class="form-label">Price per kg (LKR) *</label><input class="form-control" type="number" name="price_per_kg" id="qr_price" min="0" step="0.01" required /></div>
+              <div class="col-md-6"><label class="form-label">Sort order</label><input class="form-control" type="number" name="sort_order" id="qr_sort" value="0" /></div>
+              <div class="col-12"><label class="form-label">Status</label>
+                <select class="form-select" name="is_active" id="qr_active">
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var modal = document.getElementById('quoteRouteModal');
+    var form = document.getElementById('quoteRouteForm');
+    if (!modal || !form) return;
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      form.reset();
+      document.getElementById('qr_id').value = '';
+      form.action = '<?= e(base_url('/admin/quotes/create')) ?>';
+      if (btn && btn.getAttribute('data-mode') === 'edit') {
+        document.getElementById('qr_id').value = btn.getAttribute('data-id') || '';
+        document.getElementById('qr_slug').value = btn.getAttribute('data-slug') || '';
+        document.getElementById('qr_label').value = btn.getAttribute('data-label') || '';
+        document.getElementById('qr_country').value = btn.getAttribute('data-country') || '';
+        document.getElementById('qr_service').value = btn.getAttribute('data-service') || '';
+        document.getElementById('qr_price').value = btn.getAttribute('data-price') || '0';
+        document.getElementById('qr_sort').value = btn.getAttribute('data-sort') || '0';
+        document.getElementById('qr_active').value = btn.getAttribute('data-active') === '0' ? '0' : '1';
+        form.action = '<?= e(base_url('/admin/quotes/update')) ?>';
+      }
+    });
+  })();
+  </script>
+</template>
