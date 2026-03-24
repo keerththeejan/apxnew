@@ -8,6 +8,7 @@ use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Validator;
 use App\Models\Booking;
+use App\Services\WhatsAppService;
 
 final class BookingController extends BaseController
 {
@@ -65,6 +66,16 @@ final class BookingController extends BaseController
         }
 
         $code = Booking::create($input);
+        try {
+            $msg = WhatsAppService::renderTemplate('whatsapp_tpl_new_order', [
+                'name' => (string) $input['full_name'],
+                'code' => $code,
+                'status' => 'new',
+                'service' => strtoupper((string) $type),
+            ]);
+            WhatsAppService::sendText((string) $input['phone'], $msg, 'booking.created', null);
+        } catch (\Throwable) {
+        }
         $this->redirect('/booking/confirmation/' . $code);
     }
 

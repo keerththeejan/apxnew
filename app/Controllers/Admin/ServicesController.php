@@ -8,6 +8,9 @@ use App\Core\Csrf;
 use App\Core\Request;
 use App\Models\ActivityLog;
 use App\Models\Service;
+use App\Services\CountryCatalog;
+use App\Services\SiteConfig;
+use App\Services\WhatsAppService;
 
 final class ServicesController extends AdminBaseController
 {
@@ -16,13 +19,19 @@ final class ServicesController extends AdminBaseController
         $this->requireAuth();
 
         $q = trim((string) Request::get('q', ''));
+        $country = strtoupper(trim((string) Request::get('country', '')));
+        if ($country !== '' && !preg_match('/^[A-Z]{2}$/', $country)) {
+            $country = '';
+        }
         $page = (int) Request::get('page', 1);
         $perPage = (int) Request::get('perPage', 12);
-        $result = Service::paginate($q, $page, $perPage);
+        $result = Service::paginate($q, $page, $perPage, $country);
 
         $flashSuccess = $_SESSION['flash_success'] ?? null;
         $flashError = $_SESSION['flash_error'] ?? null;
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        $extraHead = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" crossorigin="anonymous" />';
 
         view('admin.services', [
             'title' => 'APX Admin - Services',
@@ -30,6 +39,9 @@ final class ServicesController extends AdminBaseController
             'pageTitle' => 'Services',
             'crumb' => 'APX / Services',
             'q' => $q,
+            'countryFilter' => $country,
+            'countryCodesInUse' => Service::distinctCountryCodes(),
+            'countriesJson' => CountryCatalog::all(),
             'services' => $result['rows'],
             'total' => $result['total'],
             'page' => $result['page'],
@@ -38,6 +50,9 @@ final class ServicesController extends AdminBaseController
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
             'servicesImageColumn' => Service::hasImagePathColumn(),
+            'servicesCountryColumn' => Service::hasCountryCodeColumn(),
+            'whatsappNumber' => SiteConfig::get('whatsapp_number', ''),
+            'extraHead' => $extraHead,
         ]);
     }
 
@@ -57,6 +72,7 @@ final class ServicesController extends AdminBaseController
             'link' => trim((string) Request::post('link', '')),
             'sort_order' => (int) Request::post('sort_order', 0),
             'is_active' => (int) Request::post('is_active', 1),
+            'country_code' => CountryCatalog::normalize((string) Request::post('country_code', '')),
         ];
         if ($data['title'] === '') {
             $_SESSION['flash_error'] = 'Title is required.';
@@ -91,6 +107,18 @@ final class ServicesController extends AdminBaseController
             ActivityLog::record(isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null, 'service.create', 'service', $id, null);
         } catch (\Throwable $e) {
         }
+        try {
+            $phone = SiteConfig::get('whatsapp_number', '');
+            if ($phone !== '') {
+                $msg = WhatsAppService::renderTemplate('whatsapp_tpl_service_info', [
+                    'name' => 'Admin',
+                    'service' => (string) $data['title'],
+                    'status' => 'created',
+                ]);
+                WhatsAppService::sendText($phone, $msg, 'service.created', $id);
+            }
+        } catch (\Throwable) {
+        }
         $_SESSION['flash_success'] = 'Service created.';
         $this->redirect('/admin/services');
     }
@@ -118,6 +146,7 @@ final class ServicesController extends AdminBaseController
             'link' => trim((string) Request::post('link', '')),
             'sort_order' => (int) Request::post('sort_order', 0),
             'is_active' => (int) Request::post('is_active', 1),
+            'country_code' => CountryCatalog::normalize((string) Request::post('country_code', '')),
         ];
         if ($data['title'] === '') {
             $_SESSION['flash_error'] = 'Title is required.';
@@ -172,6 +201,18 @@ final class ServicesController extends AdminBaseController
         try {
             ActivityLog::record(isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null, 'service.update', 'service', $id, null);
         } catch (\Throwable $e) {
+        }
+        try {
+            $phone = SiteConfig::get('whatsapp_number', '');
+            if ($phone !== '') {
+                $msg = WhatsAppService::renderTemplate('whatsapp_tpl_service_info', [
+                    'name' => 'Admin',
+                    'service' => (string) $data['title'],
+                    'status' => 'updated',
+                ]);
+                WhatsAppService::sendText($phone, $msg, 'service.updated', $id);
+            }
+        } catch (\Throwable) {
         }
         $_SESSION['flash_success'] = 'Service updated.';
         $this->redirect('/admin/services');

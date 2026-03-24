@@ -162,3 +162,43 @@ a{color:inherit;}
 }
 .nav-drag-handle{cursor:grab;}
 .nav-drag-handle:active{cursor:grabbing;}
+
+/* Services: country filter + flag thumbnails */
+.sf-admin-flag{display:block;margin:0 auto;object-fit:cover;}
+.sf-country-filter{min-width:160px;}
+
+/* Tom Select (Bootstrap 5 build) — dark admin */
+.ts-wrapper.form-select,
+.ts-wrapper.single .ts-control{
+  background-color:rgba(15,27,51,.85);
+  border:1px solid var(--sf-border);
+  color:var(--sf-text);
+  border-radius:0.5rem;
+  min-height:calc(1.5em + 0.75rem + 2px);
+}
+.ts-wrapper.single .ts-control .ts-input{
+  color:var(--sf-text);
+}
+.ts-dropdown{
+  background:rgba(15,27,51,.98);
+  border:1px solid var(--sf-border);
+  border-radius:0.5rem;
+  color:var(--sf-text);
+  z-index:2000;
+}
+.ts-dropdown .option{
+  padding:0.35rem 0.5rem;
+}
+.ts-dropdown .option.active{
+  background:rgba(79,140,255,.22);
+  color:#fff;
+}
+.ts-dropdown .optgroup-header{
+  color:var(--sf-muted);
+}
+.ts-wrapper .ts-control .item{
+  color:var(--sf-text);
+}
+.ts-wrapper.plugin-clear_button .ts-control .clear-button{
+  color:var(--sf-muted);
+}

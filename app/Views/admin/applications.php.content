@@ -9,10 +9,12 @@ $page = (int) ($page ?? 1);
 $pageCount = (int) ($pageCount ?? 1);
 $flashSuccess = $flashSuccess ?? null;
 $flashError = $flashError ?? null;
+$csrfToken = (string) ($csrfToken ?? \App\Core\Csrf::token());
 
 $appQuery = http_build_query(['q' => $q, 'status' => $st]);
 
 ?><template id="page-content">
+  <input type="hidden" id="waCsrfToken" value="<?= e($csrfToken) ?>" />
   <div class="row g-3">
     <div class="col-12">
       <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
@@ -32,6 +34,7 @@ $appQuery = http_build_query(['q' => $q, 'status' => $st]);
               </select>
               <button class="btn btn-outline-light btn-sm" type="submit">Filter</button>
             </form>
+            <button type="button" class="btn btn-success btn-sm js-wa-bulk"><i class="bi bi-whatsapp me-1"></i>Bulk WhatsApp</button>
             <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/applications/export?' . http_build_query(['q' => $q, 'status' => $st]))) ?>"><i class="bi bi-download me-1"></i>CSV</a>
           </div>
         </div>
@@ -40,24 +43,35 @@ $appQuery = http_build_query(['q' => $q, 'status' => $st]);
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
-                  <th>ID</th><th>Name</th><th>Email</th><th>Service</th><th>Status</th><th>Created</th><th class="text-end">Set status</th>
+                  <th style="width:34px"><input type="checkbox" class="form-check-input js-wa-check-all" /></th><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Status</th><th>Created</th><th class="text-end">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <?php if ($applications === []): ?>
-                  <tr><td colspan="7" class="text-white-50">No applications.</td></tr>
+                  <tr><td colspan="9" class="text-white-50">No applications.</td></tr>
                 <?php endif; ?>
                 <?php foreach ($applications as $a): ?>
-                  <?php $id = (int) ($a['id'] ?? 0); $cur = (string) ($a['status'] ?? 'pending'); ?>
+                  <?php
+                    $id = (int) ($a['id'] ?? 0);
+                    $cur = (string) ($a['status'] ?? 'pending');
+                    $name = (string) ($a['name'] ?? '');
+                    $phone = (string) (($a['whatsapp_number'] ?? '') !== '' ? $a['whatsapp_number'] : ($a['phone'] ?? ''));
+                    $waMsg = 'Hello ' . $name . ', your status is ' . $cur . '.';
+                  ?>
                   <tr>
+                    <td><input type="checkbox" class="form-check-input js-wa-row" value="<?= $id ?>" /></td>
                     <td><?= $id ?></td>
-                    <td class="fw-bold"><?= e((string) ($a['name'] ?? '')) ?></td>
+                    <td class="fw-bold"><?= e($name) ?></td>
                     <td class="small"><?= e((string) ($a['email'] ?? '')) ?></td>
+                    <td class="small"><?= e((string) ($a['phone'] ?? '')) ?></td>
                     <td><?= e((string) ($a['service_type'] ?? '')) ?></td>
                     <td><span class="badge <?= $cur === 'approved' ? 'text-bg-success' : ($cur === 'rejected' ? 'text-bg-danger' : 'text-bg-warning') ?>"><?= e($cur) ?></span></td>
                     <td class="small text-white-50"><?= e((string) ($a['created_at'] ?? '')) ?></td>
                     <td class="text-end">
-                      <form method="post" action="<?= e(base_url('/admin/applications/status')) ?>" class="d-inline-flex gap-1">
+                      <?php if ($phone !== ''): ?>
+                        <button type="button" class="btn btn-sm btn-success js-wa-send me-1" data-phone="<?= e($phone) ?>" data-message="<?= e($waMsg) ?>" data-context="application.manual" data-entity-id="<?= $id ?>" title="Send via WhatsApp"><i class="bi bi-whatsapp"></i></button>
+                      <?php endif; ?>
+                      <form method="post" action="<?= e(base_url('/admin/applications/status')) ?>" class="d-inline-flex gap-1 js-app-status-form">
                         <?= csrf_field() ?>
                         <input type="hidden" name="id" value="<?= $id ?>" />
                         <select class="form-select form-select-sm" name="status" style="max-width:120px">

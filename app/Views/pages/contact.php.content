@@ -52,9 +52,10 @@
               </div>
             </form>
 
+            <?php $waDigits = preg_replace('/\D/', '', (string) ($settings['whatsapp_number'] ?? '94770000000')) ?? '94770000000'; ?>
             <div class="mt-4">
               <div class="text-secondary small">Or WhatsApp us</div>
-              <a class="btn btn-success mt-2" href="https://wa.me/<?= e($settings['whatsapp_number'] ?? '94770000000') ?>" target="_blank" rel="noopener">WhatsApp</a>
+              <a class="btn btn-success mt-2" href="https://wa.me/<?= e($waDigits) ?>" target="_blank" rel="noopener">WhatsApp</a>
             </div>
           </div>
         </div>

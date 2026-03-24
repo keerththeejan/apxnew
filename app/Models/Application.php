@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\WhatsAppService;
 use PDO;
 
 final class Application extends Model
@@ -18,13 +19,15 @@ final class Application extends Model
             ':name' => (string) ($data['name'] ?? ''),
             ':email' => (string) ($data['email'] ?? ''),
             ':phone' => (string) ($data['phone'] ?? ''),
+            ':whatsapp_number' => WhatsAppService::formatPhone((string) ($data['phone'] ?? '')),
+            ':country_code' => strtoupper(trim((string) ($data['country_code'] ?? ''))),
             ':service_type' => (string) ($data['service_type'] ?? ''),
             ':message' => (string) ($data['message'] ?? ''),
             ':status' => (string) ($data['status'] ?? 'pending'),
             ':form_json' => (string) ($data['form_data_json'] ?? ''),
         ];
         try {
-            $stmt = $pdo->prepare('INSERT INTO applications (name, email, phone, service_type, message, status, form_data_json, is_contacted, created_at, updated_at) VALUES (:name, :email, :phone, :service_type, :message, :status, :form_json, 0, NOW(), NOW())');
+            $stmt = $pdo->prepare('INSERT INTO applications (name, email, phone, whatsapp_number, country_code, service_type, message, status, form_data_json, is_contacted, created_at, updated_at) VALUES (:name, :email, :phone, :whatsapp_number, :country_code, :service_type, :message, :status, :form_json, 0, NOW(), NOW())');
             $stmt->execute($params);
         } catch (\PDOException $e) {
             $m = $e->getMessage();
@@ -173,5 +176,40 @@ final class Application extends Model
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':s', $status);
         return $stmt->execute();
+    }
+
+    public static function findById(int $id): ?array
+    {
+        $stmt = self::pdo()->prepare('SELECT * FROM applications WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return list<array<string,mixed>>
+     */
+    public static function findManyByIds(array $ids): array
+    {
+        $clean = [];
+        foreach ($ids as $id) {
+            $i = (int) $id;
+            if ($i > 0) {
+                $clean[] = $i;
+            }
+        }
+        if ($clean === []) {
+            return [];
+        }
+        $ph = implode(',', array_fill(0, count($clean), '?'));
+        $stmt = self::pdo()->prepare("SELECT * FROM applications WHERE id IN ({$ph}) ORDER BY id DESC");
+        foreach ($clean as $idx => $id) {
+            $stmt->bindValue($idx + 1, $id, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
 }

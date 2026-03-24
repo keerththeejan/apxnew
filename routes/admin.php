@@ -112,6 +112,7 @@ $router->post('/admin/blog/delete', [BlogPostsController::class, 'destroy']);
 $router->get('/admin/applications.html', [ApplicationsController::class, 'htmlAlias']);
 $router->get('/admin/applications', [ApplicationsController::class, 'index']);
 $router->post('/admin/applications/status', [ApplicationsController::class, 'updateStatus']);
+$router->post('/admin/applications/bulk-whatsapp', [ApplicationsController::class, 'bulkWhatsapp']);
 $router->get('/admin/applications/export', [ApplicationsController::class, 'exportCsv']);
 
 $router->get('/admin/users.html', [UsersController::class, 'htmlAlias']);
@@ -123,3 +124,6 @@ $router->get('/admin/users/export', [UsersController::class, 'exportCsv']);
 $router->get('/admin/settings.html', [SettingsController::class, 'htmlAlias']);
 $router->get('/admin/settings', [SettingsController::class, 'index']);
 $router->post('/admin/settings/save', [SettingsController::class, 'save']);
+$router->get('/admin/settings/whatsapp', [SettingsController::class, 'whatsapp']);
+$router->post('/admin/settings/whatsapp/save', [SettingsController::class, 'saveWhatsapp']);
+$router->post('/admin/settings/whatsapp/send', [SettingsController::class, 'sendWhatsapp']);

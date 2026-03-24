@@ -199,6 +199,8 @@ if (!function_exists('apx_home_banner_slide_markup')) {
             } else {
                 $iconMarkup = e($svcIcon);
             }
+            $svcCountry = strtoupper(trim((string) ($svc['country_code'] ?? '')));
+            $svcFlagUrl = $svcCountry !== '' ? \App\Services\CountryCatalog::flagUrl($svcCountry, 40) : '';
           ?>
           <a class="service-card glass-card<?= $svcImgUrl !== '' ? ' service-card--has-image' : '' ?>" href="<?= e($href) ?>" aria-label="<?= e((string) ($svc['title'] ?? '')) ?>">
             <?php if ($svcImgUrl !== ''): ?>
@@ -208,7 +210,17 @@ if (!function_exists('apx_home_banner_slide_markup')) {
             <?php endif; ?>
             <div class="service-card-top">
               <?php if ($svcImgUrl === ''): ?>
-                <div class="service-icon" aria-hidden="true"><?= $iconMarkup ?></div>
+                <div class="service-icon<?= $svcFlagUrl !== '' ? ' service-icon--flag' : '' ?>" aria-hidden="true">
+                  <?php if ($svcFlagUrl !== ''): ?>
+                    <img class="service-flag-img" src="<?= e($svcFlagUrl) ?>" alt="" width="74" height="50" loading="lazy" decoding="async" />
+                  <?php else: ?>
+                    <?= $iconMarkup ?>
+                  <?php endif; ?>
+                </div>
+              <?php elseif ($svcFlagUrl !== ''): ?>
+                <div class="service-card-flag" aria-hidden="true">
+                  <img src="<?= e($svcFlagUrl) ?>" alt="" width="64" height="42" loading="lazy" decoding="async" />
+                </div>
               <?php endif; ?>
               <div class="service-title"><?= e(strtoupper((string) ($svc['title'] ?? ''))) ?></div>
             </div>
@@ -323,3 +335,12 @@ if (!function_exists('apx_home_banner_slide_markup')) {
     </section>
   </div>
 </section>
+<?php
+  $homeWa = preg_replace('/\D/', '', (string) ($settings['whatsapp_number'] ?? '')) ?? '';
+?>
+<?php if ($homeWa !== ''): ?>
+  <a class="home-whatsapp-fab" href="https://wa.me/<?= e($homeWa) ?>" target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+    <i class="bi bi-whatsapp" aria-hidden="true"></i>
+    <span>WhatsApp</span>
+  </a>
+<?php endif; ?>

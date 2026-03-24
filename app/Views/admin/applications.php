@@ -15,6 +15,7 @@ view('layouts.admin', [
     'page' => $page ?? 1,
     'perPage' => $perPage ?? 15,
     'pageCount' => $pageCount ?? 1,
+    'csrfToken' => $csrfToken ?? '',
     'flashSuccess' => $flashSuccess ?? null,
     'flashError' => $flashError ?? null,
 ]);

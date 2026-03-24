@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+$s = $settings ?? [];
+$logs = $logs ?? [];
+$v = static function (string $key, string $default = '') use ($s): string {
+    return (string) ($s[$key] ?? $default);
+};
+
+?><template id="page-content">
+  <div class="row g-3">
+    <?php if (!empty($flashSuccess)): ?>
+      <div class="col-12"><div class="alert alert-success mb-0"><?= e((string) $flashSuccess) ?></div></div>
+    <?php endif; ?>
+    <?php if (!empty($flashError)): ?>
+      <div class="col-12"><div class="alert alert-danger mb-0"><?= e((string) $flashError) ?></div></div>
+    <?php endif; ?>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">WhatsApp Integration</h2>
+          <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('/admin/settings')) ?>">Back to settings</a>
+        </div>
+        <div class="sf-card-body">
+          <form method="post" action="<?= e(base_url('/admin/settings/whatsapp/save')) ?>" class="row g-3">
+            <?= csrf_field() ?>
+            <div class="col-12">
+              <input type="hidden" name="whatsapp_enabled" value="0" />
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="whatsapp_enabled" id="wa_enabled" value="1" <?= $v('whatsapp_enabled', '0') === '1' ? 'checked' : '' ?> />
+                <label class="form-check-label fw-bold" for="wa_enabled">Enable WhatsApp sending</label>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-bold">Default country code</label>
+              <input class="form-control" name="whatsapp_country_code" value="<?= e($v('whatsapp_country_code', '94')) ?>" placeholder="94" />
+            </div>
+            <div class="col-12 col-md-8">
+              <label class="form-label fw-bold">WhatsApp number (international)</label>
+              <input class="form-control" name="whatsapp_number" value="<?= e($v('whatsapp_number', '')) ?>" placeholder="+947XXXXXXXX" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-bold">Phone Number ID (Cloud API)</label>
+              <input class="form-control" name="whatsapp_phone_number_id" value="<?= e($v('whatsapp_phone_number_id', '')) ?>" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-bold">API Token (Cloud API)</label>
+              <input class="form-control" name="whatsapp_api_token" value="<?= e($v('whatsapp_api_token', '')) ?>" autocomplete="off" />
+              <div class="form-text text-white-50 small">For production, prefer <code>WHATSAPP_API_TOKEN</code> in <code>.env</code>.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Template: New Order</label>
+              <input class="form-control" name="whatsapp_tpl_new_order" value="<?= e($v('whatsapp_tpl_new_order', 'Hello {{name}}, your booking {{code}} has been received.')) ?>" />
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Template: Status Update</label>
+              <input class="form-control" name="whatsapp_tpl_status_update" value="<?= e($v('whatsapp_tpl_status_update', 'Hello {{name}}, your status is now {{status}}.')) ?>" />
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Template: Service Info</label>
+              <input class="form-control" name="whatsapp_tpl_service_info" value="<?= e($v('whatsapp_tpl_service_info', 'Hello {{name}}, here is the service info: {{service}}')) ?>" />
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button class="btn btn-primary" type="submit"><i class="bi bi-save me-2"></i>Save WhatsApp settings</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="sf-card">
+        <div class="sf-card-header">
+          <h2 class="sf-card-title">Message Logs</h2>
+          <div class="small text-white-50">Latest sent / failed messages</div>
+        </div>
+        <div class="sf-card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr><th>ID</th><th>Status</th><th>Provider</th><th>To</th><th>Context</th><th>HTTP</th><th>Time</th></tr>
+              </thead>
+              <tbody>
+                <?php if ($logs === []): ?>
+                  <tr><td colspan="7" class="text-white-50">No WhatsApp logs yet.</td></tr>
+                <?php endif; ?>
+                <?php foreach ($logs as $row): ?>
+                  <tr>
+                    <td><?= (int) ($row['id'] ?? 0) ?></td>
+                    <td><?= e((string) ($row['status'] ?? '')) ?></td>
+                    <td><?= e((string) ($row['provider'] ?? '')) ?></td>
+                    <td><?= e((string) ($row['to_phone'] ?? '')) ?></td>
+                    <td><?= e((string) ($row['context_key'] ?? '')) ?></td>
+                    <td><?= (int) ($row['http_code'] ?? 0) ?></td>
+                    <td class="small text-white-50"><?= e((string) ($row['created_at'] ?? '')) ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+

@@ -51,7 +51,10 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
       <div class="sf-card">
         <div class="sf-card-header">
           <h2 class="sf-card-title">Configuration</h2>
-          <div class="sf-card-meta">Brand, appearance, contact, and security</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="sf-card-meta">Brand, appearance, contact, and security</div>
+            <a class="btn btn-outline-success btn-sm" href="<?= e(base_url('/admin/settings/whatsapp')) ?>"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+          </div>
         </div>
         <div class="sf-card-body">
           <form id="settingsAllForm" method="post" action="<?= e(base_url('/admin/settings/save')) ?>" enctype="multipart/form-data">

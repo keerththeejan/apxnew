@@ -2,15 +2,35 @@
 
 declare(strict_types=1);
 
+use App\Services\CountryCatalog;
+
 $services = $services ?? [];
 $q = (string) ($q ?? '');
+$countryFilter = (string) ($countryFilter ?? '');
+$countryCodesInUse = $countryCodesInUse ?? [];
+$countriesJson = $countriesJson ?? [];
 $page = (int) ($page ?? 1);
 $pageCount = (int) ($pageCount ?? 1);
 $flashSuccess = $flashSuccess ?? null;
 $flashError = $flashError ?? null;
 $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
+$servicesCountryColumn = (bool) ($servicesCountryColumn ?? true);
+$whatsappNumber = (string) ($whatsappNumber ?? '');
+
+$adminServicesQuery = static function (string $q, string $country, int $page): string {
+    $parts = ['page' => $page];
+    if ($q !== '') {
+        $parts['q'] = $q;
+    }
+    if ($country !== '') {
+        $parts['country'] = $country;
+    }
+
+    return http_build_query($parts);
+};
 
 ?><template id="page-content">
+  <input type="hidden" id="waCsrfToken" value="<?= e(\App\Core\Csrf::token()) ?>" />
   <div class="row g-3">
     <div class="col-12">
       <?php if (!$servicesImageColumn): ?>
@@ -19,16 +39,31 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
           Run <code>database/patches/add_services_image_path.sql</code> in phpMyAdmin, or ask your host to grant <code>ALTER</code> on this database.
         </div>
       <?php endif; ?>
+      <?php if (!$servicesCountryColumn): ?>
+        <div class="alert alert-warning mb-0 mt-2">
+          Country flags need a <code>country_code</code> column on <code>services</code>. The app could not add it automatically (your DB user may lack <code>ALTER</code> permission).
+          Run the migration <code>database/migrations/20260322_000011_services_country_code.php</code> or add the column manually.
+        </div>
+      <?php endif; ?>
       <?php if (!empty($flashSuccess)): ?><div class="alert alert-success"><?= e((string) $flashSuccess) ?></div><?php endif; ?>
       <?php if (!empty($flashError)): ?><div class="alert alert-danger"><?= e((string) $flashError) ?></div><?php endif; ?>
 
       <div class="sf-card">
-        <div class="sf-card-header">
+        <div class="sf-card-header flex-wrap gap-2 align-items-center">
           <h2 class="sf-card-title">Services</h2>
-          <div class="d-flex gap-2">
-            <form class="d-flex gap-2" method="get" action="<?= e(base_url('/admin/services')) ?>">
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <form class="d-flex flex-wrap gap-2 align-items-center" method="get" action="<?= e(base_url('/admin/services')) ?>">
               <input class="form-control form-control-sm" name="q" value="<?= e($q) ?>" placeholder="Search..." style="max-width:220px" />
-              <button class="btn btn-outline-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+              <?php if ($servicesCountryColumn && $countryCodesInUse !== []): ?>
+                <select name="country" class="form-select form-select-sm sf-country-filter" aria-label="Filter by country" style="max-width:min(220px,100%)">
+                  <option value="">All countries</option>
+                  <?php foreach ($countryCodesInUse as $code): ?>
+                    <?php $code = (string) $code; ?>
+                    <option value="<?= e($code) ?>" <?= $countryFilter === $code ? 'selected' : '' ?>><?= e($code) ?> — <?= e(CountryCatalog::nameForCode($code)) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              <?php endif; ?>
+              <button class="btn btn-outline-light btn-sm" type="submit" title="Apply filters"><i class="bi bi-search"></i></button>
             </form>
             <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#svcModal" data-mode="create"><i class="bi bi-plus-lg me-1"></i>New</button>
           </div>
@@ -37,11 +72,22 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
-                <tr><th class="d-none d-sm-table-cell" style="width:80px">Image</th><th>Title</th><th class="d-none d-md-table-cell">Link</th><th>Order</th><th>Status</th><th class="text-end">Actions</th></tr>
+                <tr>
+                  <th class="d-none d-sm-table-cell" style="width:80px">Image</th>
+                  <?php if ($servicesCountryColumn): ?><th class="text-center" style="width:72px">Flag</th><?php endif; ?>
+                  <th>Title</th>
+                  <th class="d-none d-md-table-cell">Link</th>
+                  <th>Order</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
               </thead>
               <tbody>
+                <?php
+                  $colSpan = $servicesCountryColumn ? 7 : 6;
+                ?>
                 <?php if ($services === []): ?>
-                  <tr><td colspan="6" class="text-white-50">No services.</td></tr>
+                  <tr><td colspan="<?= (int) $colSpan ?>" class="text-white-50">No services.</td></tr>
                 <?php endif; ?>
                 <?php foreach ($services as $s): ?>
                   <?php
@@ -54,6 +100,8 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
                     $link = (string) ($s['link'] ?? '');
                     $sort = (int) ($s['sort_order'] ?? 0);
                     $active = (int) ($s['is_active'] ?? 1);
+                    $cc = strtoupper(trim((string) ($s['country_code'] ?? '')));
+                    $flagUrl = ($cc !== '' && $servicesCountryColumn) ? CountryCatalog::flagUrl($cc, 40) : '';
                   ?>
                   <tr>
                     <td class="d-none d-sm-table-cell">
@@ -63,13 +111,36 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
                         <span class="text-white-50 small">—</span>
                       <?php endif; ?>
                     </td>
+                    <?php if ($servicesCountryColumn): ?>
+                      <td class="text-center">
+                        <?php if ($flagUrl !== ''): ?>
+                          <img src="<?= e($flagUrl) ?>" alt="" width="36" height="24" class="rounded border border-secondary sf-admin-flag" loading="lazy" />
+                          <div class="small text-white-50"><?= e($cc) ?></div>
+                        <?php else: ?>
+                          <span class="text-white-50 small">—</span>
+                        <?php endif; ?>
+                      </td>
+                    <?php endif; ?>
                     <td class="fw-bold"><?= e($title) ?></td>
                     <td class="text-white-50 small d-none d-md-table-cell"><?= e($link) ?></td>
                     <td><?= (int) $sort ?></td>
                     <td><?= $active === 1 ? '<span class="badge text-bg-success">On</span>' : '<span class="badge text-bg-secondary">Off</span>' ?></td>
                     <td class="text-end">
+                      <?php
+                        $serviceMsg = 'Service: ' . $title . "\n"
+                          . 'Description: ' . $desc . "\n"
+                          . 'Link: ' . $link;
+                      ?>
+                      <?php if ($whatsappNumber !== ''): ?>
+                        <button type="button" class="btn btn-sm btn-success js-wa-send me-1"
+                          data-phone="<?= e($whatsappNumber) ?>"
+                          data-message="<?= e($serviceMsg) ?>"
+                          data-context="service.manual"
+                          data-entity-id="<?= (int) $id ?>"
+                          title="Send via WhatsApp"><i class="bi bi-whatsapp"></i></button>
+                      <?php endif; ?>
                       <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#svcModal" data-mode="edit"
-                        data-id="<?= e((string) $id) ?>" data-icon="<?= e($icon) ?>" data-image_path="<?= e($imgPath) ?>" data-image_url="<?= e($imgUrl) ?>" data-title="<?= e($title) ?>" data-description="<?= e($desc) ?>" data-link="<?= e($link) ?>" data-sort="<?= e((string) $sort) ?>" data-active="<?= e((string) $active) ?>">Edit</button>
+                        data-id="<?= e((string) $id) ?>" data-icon="<?= e($icon) ?>" data-image_path="<?= e($imgPath) ?>" data-image_url="<?= e($imgUrl) ?>" data-title="<?= e($title) ?>" data-description="<?= e($desc) ?>" data-link="<?= e($link) ?>" data-sort="<?= e((string) $sort) ?>" data-active="<?= e((string) $active) ?>" data-country-code="<?= e($cc) ?>">Edit</button>
                       <form class="d-inline" method="post" action="<?= e(base_url('/admin/services/delete')) ?>" onsubmit="return confirm('Delete this service?');">
                         <?= csrf_field() ?>
                         <input type="hidden" name="id" value="<?= (int) $id ?>" />
@@ -83,10 +154,10 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
           </div>
           <?php if ($pageCount > 1): ?>
             <nav class="mt-3">
-              <ul class="pagination pagination-sm mb-0">
+              <ul class="pagination pagination-sm mb-0 flex-wrap">
                 <?php for ($p = 1; $p <= $pageCount; $p++): ?>
                   <li class="page-item <?= $p === $page ? 'active' : '' ?>">
-                    <a class="page-link" href="<?= e(base_url('/admin/services?q=' . urlencode($q) . '&page=' . $p)) ?>"><?= $p ?></a>
+                    <a class="page-link" href="<?= e(base_url('/admin/services?' . $adminServicesQuery($q, $countryFilter, $p))) ?>"><?= $p ?></a>
                   </li>
                 <?php endfor; ?>
               </ul>
@@ -104,13 +175,33 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
           <h5 class="modal-title">Service</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <form method="post" action="<?= e(base_url('/admin/services/create')) ?>" id="svcForm" enctype="multipart/form-data">
+        <form method="post" action="<?= e(base_url('/admin/services/create')) ?>" id="svcForm" enctype="multipart/form-data"
+          data-url-create="<?= e(base_url('/admin/services/create')) ?>"
+          data-url-update="<?= e(base_url('/admin/services/update')) ?>">
           <?= csrf_field() ?>
           <input type="hidden" name="id" id="svc_id" value="" />
           <div class="modal-body">
             <div class="row g-2">
               <div class="col-md-6"><label class="form-label">Icon (emoji or <code class="small">bi-…</code>)</label><input class="form-control" name="icon" id="svc_icon" placeholder="✈️ or bi-airplane" /></div>
               <div class="col-md-6"><label class="form-label">Sort order</label><input class="form-control" type="number" name="sort_order" id="svc_sort" value="0" /></div>
+              <?php if ($servicesCountryColumn): ?>
+              <div class="col-12">
+                <label class="form-label">Country <span class="text-white-50 fw-normal">(optional)</span></label>
+                <select class="form-select" name="country_code" id="svc_country" autocomplete="off" data-placeholder="Select Country">
+                  <option value=""><?= e('Select Country') ?></option>
+                  <?php foreach ($countriesJson as $c): ?>
+                    <?php
+                      $cCode = (string) ($c['code'] ?? '');
+                      $cName = (string) ($c['name'] ?? '');
+                    ?>
+                    <?php if ($cCode !== '' && $cName !== ''): ?>
+                      <option value="<?= e($cCode) ?>"><?= e($cName) ?></option>
+                    <?php endif; ?>
+                  <?php endforeach; ?>
+                </select>
+                <div class="form-text text-white-50 small">Shown on service cards and in this list. If empty, the icon above is used on cards.</div>
+              </div>
+              <?php endif; ?>
               <?php if ($servicesImageColumn): ?>
               <div class="col-12">
                 <label class="form-label">Card image <span class="text-white-50 fw-normal">(optional)</span></label>
@@ -139,60 +230,4 @@ $servicesImageColumn = (bool) ($servicesImageColumn ?? true);
       </div>
     </div>
   </div>
-  <script>
-  (function(){
-    var modal = document.getElementById('svcModal');
-    var form = document.getElementById('svcForm');
-    if (!modal || !form) return;
-    var fileInput = document.getElementById('svc_image');
-    var previewWrap = document.getElementById('svcImgPreviewWrap');
-    var previewImg = document.getElementById('svcImgPreview');
-    var clearWrap = document.getElementById('svcClearImgWrap');
-
-    function hidePreview(){
-      if (previewImg) previewImg.src = '';
-      if (previewWrap) previewWrap.classList.add('d-none');
-      if (clearWrap) clearWrap.classList.add('d-none');
-      if (fileInput) fileInput.value = '';
-    }
-
-    if (fileInput) {
-      fileInput.addEventListener('change', function(){
-        var f = fileInput.files && fileInput.files[0];
-        if (!f) { hidePreview(); return; }
-        if (previewImg) previewImg.src = URL.createObjectURL(f);
-        if (previewWrap) previewWrap.classList.remove('d-none');
-        if (clearWrap) clearWrap.classList.add('d-none');
-        var c = document.getElementById('svc_clear_image');
-        if (c) c.checked = false;
-      });
-    }
-
-    modal.addEventListener('show.bs.modal', function(ev){
-      var btn = ev.relatedTarget;
-      var mode = btn && btn.getAttribute('data-mode') === 'edit' ? 'edit' : 'create';
-      form.reset();
-      document.getElementById('svc_id').value = '';
-      hidePreview();
-      form.action = mode === 'edit' ? '<?= e(base_url('/admin/services/update')) ?>' : '<?= e(base_url('/admin/services/create')) ?>';
-      if (mode === 'edit' && btn) {
-        document.getElementById('svc_id').value = btn.getAttribute('data-id') || '';
-        document.getElementById('svc_icon').value = btn.getAttribute('data-icon') || '';
-        document.getElementById('svc_title').value = btn.getAttribute('data-title') || '';
-        document.getElementById('svc_desc').value = btn.getAttribute('data-description') || '';
-        document.getElementById('svc_link').value = btn.getAttribute('data-link') || '';
-        document.getElementById('svc_sort').value = btn.getAttribute('data-sort') || '0';
-        document.getElementById('svc_active').value = btn.getAttribute('data-active') || '1';
-        var iu = btn.getAttribute('data-image_url') || '';
-        if (iu && previewImg && previewWrap) {
-          previewImg.src = iu;
-          previewWrap.classList.remove('d-none');
-          if (clearWrap) clearWrap.classList.remove('d-none');
-        }
-        var clr = document.getElementById('svc_clear_image');
-        if (clr) clr.checked = false;
-      }
-    });
-  })();
-  </script>
 </template>

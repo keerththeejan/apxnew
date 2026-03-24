@@ -17,9 +17,16 @@
               </div>
             </div>
 
+            <?php
+              $bookingPhoneDigits = preg_replace('/\D/', '', (string) ($settings['whatsapp_number'] ?? '')) ?? '';
+              $bookingWaText = rawurlencode('Hello APX, I am following up on booking ' . (string) ($booking['code'] ?? '') . '.');
+            ?>
             <div class="d-flex flex-wrap gap-2 mt-3">
               <a class="btn btn-primary" href="<?= e(base_url('/')) ?>">Back to home</a>
               <a class="btn btn-outline-secondary" href="<?= e(base_url('/contact')) ?>">Contact</a>
+              <?php if ($bookingPhoneDigits !== ''): ?>
+                <a class="btn btn-success" href="https://wa.me/<?= e($bookingPhoneDigits) ?>?text=<?= e($bookingWaText) ?>" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Send via WhatsApp</a>
+              <?php endif; ?>
             </div>
           </div>
         </div>

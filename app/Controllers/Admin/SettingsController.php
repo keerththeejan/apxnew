@@ -9,6 +9,8 @@ use App\Core\Request;
 use App\Models\ActivityLog;
 use App\Models\AdminNotification;
 use App\Models\Setting;
+use App\Models\WhatsAppLog;
+use App\Services\WhatsAppService;
 
 final class SettingsController extends AdminBaseController
 {
@@ -34,6 +36,27 @@ final class SettingsController extends AdminBaseController
             'pageTitle' => 'Settings',
             'crumb' => $siteName . ' / Settings',
             'settings' => $s,
+            'flashSuccess' => $flashSuccess,
+            'flashError' => $flashError,
+        ]);
+    }
+
+    public function whatsapp(): void
+    {
+        $this->requireSuperAdmin();
+
+        $flashSuccess = $_SESSION['flash_success'] ?? null;
+        $flashError = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        $s = Setting::allKeyed();
+        view('admin.settings_whatsapp', [
+            'title' => 'APX Admin - WhatsApp Settings',
+            'pageKey' => 'settings',
+            'pageTitle' => 'WhatsApp Settings',
+            'crumb' => 'APX / Settings / WhatsApp',
+            'settings' => $s,
+            'logs' => WhatsAppLog::latest(120),
             'flashSuccess' => $flashSuccess,
             'flashError' => $flashError,
         ]);
@@ -136,6 +159,80 @@ final class SettingsController extends AdminBaseController
         $this->respondSave(true, 'Settings saved successfully.');
     }
 
+    public function saveWhatsapp(): void
+    {
+        $this->requireSuperAdmin();
+        if (!Csrf::verify((string) Request::post('_token', ''))) {
+            $this->respondSave(false, 'CSRF token mismatch', 419, '/admin/settings/whatsapp');
+
+            return;
+        }
+
+        $enabled = Request::post('whatsapp_enabled') === '1' ? '1' : '0';
+        $countryCode = preg_replace('/\D/', '', (string) Request::post('whatsapp_country_code', '94')) ?? '94';
+        $countryCode = $countryCode !== '' ? $countryCode : '94';
+
+        $num = WhatsAppService::formatPhone((string) Request::post('whatsapp_number', ''), $countryCode);
+        if ((string) Request::post('whatsapp_number', '') !== '' && $num === '') {
+            $this->respondSave(false, 'Invalid WhatsApp number format.', 422, '/admin/settings/whatsapp');
+
+            return;
+        }
+
+        Setting::set('whatsapp_enabled', $enabled);
+        Setting::set('whatsapp_country_code', $countryCode);
+        Setting::set('whatsapp_number', $num);
+        Setting::set('whatsapp_phone_number_id', trim((string) Request::post('whatsapp_phone_number_id', '')));
+        Setting::set('whatsapp_api_token', trim((string) Request::post('whatsapp_api_token', '')));
+        Setting::set('whatsapp_tpl_new_order', trim((string) Request::post('whatsapp_tpl_new_order', '')));
+        Setting::set('whatsapp_tpl_status_update', trim((string) Request::post('whatsapp_tpl_status_update', '')));
+        Setting::set('whatsapp_tpl_service_info', trim((string) Request::post('whatsapp_tpl_service_info', '')));
+
+        try {
+            ActivityLog::record(
+                isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null,
+                'settings.whatsapp.save',
+                'settings',
+                null,
+                ['keys' => 'whatsapp']
+            );
+            AdminNotification::create('WhatsApp settings were updated.', 'info');
+        } catch (\Throwable) {
+        }
+
+        $this->respondSave(true, 'WhatsApp settings saved.', 200, '/admin/settings/whatsapp');
+    }
+
+    public function sendWhatsapp(): void
+    {
+        $this->requireAuth();
+        if (!Csrf::verify((string) Request::post('_token', ''))) {
+            http_response_code(419);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'message' => 'CSRF token mismatch'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $phone = trim((string) Request::post('phone', ''));
+        $msg = trim((string) Request::post('message', ''));
+        if ($phone === '' || $msg === '') {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'message' => 'Phone and message are required'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $ctx = trim((string) Request::post('context', 'admin.manual'));
+        $entityId = (int) Request::post('entity_id', 0);
+        $res = WhatsAppService::sendText($phone, $msg, $ctx, $entityId > 0 ? $entityId : null);
+
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($res['ok'] ? 200 : 422);
+        echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     /**
      * @return null|string|false null = keep existing path; string = new path; false = error
      */
@@ -212,7 +309,7 @@ final class SettingsController extends AdminBaseController
         return json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
-    private function respondSave(bool $ok, string $message, int $code = 200): void
+    private function respondSave(bool $ok, string $message, int $code = 200, string $redirectTo = '/admin/settings'): void
     {
         $ajax = strtolower((string) Request::header('X-Requested-With', '')) === 'xmlhttprequest'
             || (string) Request::post('ajax', '') === '1';
@@ -229,6 +326,6 @@ final class SettingsController extends AdminBaseController
         } else {
             $_SESSION['flash_error'] = $message;
         }
-        $this->redirect('/admin/settings');
+        $this->redirect($redirectTo);
     }
 }

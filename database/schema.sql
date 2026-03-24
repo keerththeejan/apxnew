@@ -139,6 +139,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   type ENUM('visa','flight','hotel','insurance') NOT NULL,
   full_name VARCHAR(120) NOT NULL,
   phone VARCHAR(40) NOT NULL,
+  whatsapp_number VARCHAR(30) NULL,
+  country_code VARCHAR(2) NULL,
   email VARCHAR(190) NULL,
   destination VARCHAR(120) NULL,
   travel_date VARCHAR(20) NULL,
@@ -222,6 +224,7 @@ CREATE TABLE IF NOT EXISTS services (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   icon VARCHAR(60) NULL,
   image_path VARCHAR(500) NULL,
+  country_code VARCHAR(2) NULL,
   title VARCHAR(160) NOT NULL,
   description VARCHAR(255) NULL,
   link VARCHAR(255) NULL,
@@ -277,6 +280,8 @@ CREATE TABLE IF NOT EXISTS applications (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NULL,
   phone VARCHAR(40) NOT NULL,
+  whatsapp_number VARCHAR(30) NULL,
+  country_code VARCHAR(2) NULL,
   service_type VARCHAR(80) NULL,
   message TEXT NULL,
   is_contacted TINYINT(1) NOT NULL DEFAULT 0,
@@ -360,6 +365,22 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   KEY idx_al_entity (entity, entity_id),
   CONSTRAINT fk_al_admin FOREIGN KEY (admin_id) REFERENCES admins(id)
     ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS whatsapp_logs (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  status VARCHAR(20) NOT NULL,
+  provider VARCHAR(40) NOT NULL,
+  to_phone VARCHAR(30) NOT NULL,
+  message_body TEXT NOT NULL,
+  context_key VARCHAR(80) NULL,
+  entity_id BIGINT NULL,
+  http_code INT NOT NULL DEFAULT 0,
+  response_body TEXT NULL,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_whatsapp_logs_status (status),
+  KEY idx_whatsapp_logs_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Finance offerings (admin CRUD)

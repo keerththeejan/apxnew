@@ -217,6 +217,119 @@
     if (key === 'navigation') {
       setTimeout(initNavigationOrdering, 0);
     }
+    if (key === 'services') {
+      setTimeout(initServicesPage, 0);
+    }
+    if (key === 'applications') {
+      setTimeout(initApplicationsPage, 0);
+    }
+    if (key === 'services' || key === 'applications') {
+      setTimeout(initWhatsAppActions, 0);
+    }
+  }
+
+  function initWhatsAppActions(){
+    if (document.body.getAttribute('data-wa-wired') === '1') return;
+    document.body.setAttribute('data-wa-wired', '1');
+
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('.js-wa-send');
+      if (!btn) return;
+      e.preventDefault();
+      var tokenEl = document.getElementById('waCsrfToken');
+      var token = tokenEl ? tokenEl.value : '';
+      var phone = btn.getAttribute('data-phone') || '';
+      var message = btn.getAttribute('data-message') || '';
+      var context = btn.getAttribute('data-context') || 'admin.manual';
+      var entityId = btn.getAttribute('data-entity-id') || '';
+      if (!token || !phone || !message) {
+        showToast('WhatsApp', 'Missing data to send message.');
+        return;
+      }
+      var fd = new FormData();
+      fd.append('_token', token);
+      fd.append('phone', phone);
+      fd.append('message', message);
+      fd.append('context', context);
+      fd.append('entity_id', entityId);
+      fetch(adminUrl('/admin/settings/whatsapp/send'), {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd
+      }).then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data && data.ok) {
+          if (data.provider === 'click_to_chat' && data.click_url) {
+            window.open(data.click_url, '_blank', 'noopener');
+          }
+          showToast('WhatsApp', data.message || 'Message sent.');
+        } else {
+          showToast('WhatsApp', (data && data.message) ? data.message : 'Failed to send.');
+        }
+      }).catch(function(){
+        showToast('WhatsApp', 'Failed to send.');
+      });
+    });
+  }
+
+  function initApplicationsPage(){
+    var checkAll = document.querySelector('.js-wa-check-all');
+    if (checkAll) {
+      checkAll.addEventListener('change', function(){
+        var rows = document.querySelectorAll('.js-wa-row');
+        rows.forEach(function(n){ n.checked = !!checkAll.checked; });
+      });
+    }
+
+    var bulk = document.querySelector('.js-wa-bulk');
+    if (bulk) {
+      bulk.addEventListener('click', function(){
+        var tokenEl = document.getElementById('waCsrfToken');
+        var token = tokenEl ? tokenEl.value : '';
+        var checked = Array.prototype.slice.call(document.querySelectorAll('.js-wa-row:checked')).map(function(n){ return n.value; });
+        if (!token || checked.length === 0) {
+          showToast('WhatsApp', 'Select at least one application.');
+          return;
+        }
+        var custom = window.prompt('Optional custom message for selected rows (leave empty for template):', '') || '';
+        var fd = new FormData();
+        fd.append('_token', token);
+        checked.forEach(function(id){ fd.append('ids[]', id); });
+        fd.append('message', custom);
+        fetch(adminUrl('/admin/applications/bulk-whatsapp'), {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: fd
+        }).then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data && data.ok) {
+            showToast('WhatsApp', 'Sent ' + (data.sent || 0) + ' of ' + (data.selected || checked.length));
+          } else {
+            showToast('WhatsApp', (data && data.message) ? data.message : 'Bulk send failed.');
+          }
+        }).catch(function(){ showToast('WhatsApp', 'Bulk send failed.'); });
+      });
+    }
+
+    document.querySelectorAll('.js-app-status-form').forEach(function(form){
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var fd = new FormData(form);
+        fd.append('ajax', '1');
+        fetch(form.getAttribute('action') || adminUrl('/admin/applications/status'), {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: fd
+        }).then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data && data.ok) {
+            showToast('Status', data.message || 'Updated.');
+          } else {
+            showToast('Status', (data && data.message) ? data.message : 'Update failed.');
+          }
+        }).catch(function(){ showToast('Status', 'Update failed.'); });
+      });
+    });
   }
 
   function loadSortableScript(cb){
@@ -230,6 +343,155 @@
     s.onload = function(){ cb(); };
     s.onerror = function(){ console.error('SortableJS failed to load'); };
     document.head.appendChild(s);
+  }
+
+  function loadTomSelectScript(cb){
+    if (typeof window.TomSelect !== 'undefined') {
+      cb();
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js';
+    s.crossOrigin = 'anonymous';
+    s.onload = function(){ cb(); };
+    s.onerror = function(){ console.error('Tom Select failed to load'); };
+    document.head.appendChild(s);
+  }
+
+  function initServicesPage(){
+    var modal = document.getElementById('svcModal');
+    var form = document.getElementById('svcForm');
+    if (!modal || !form) return;
+
+    var countrySel = document.getElementById('svc_country');
+    var fileInput = document.getElementById('svc_image');
+    var previewWrap = document.getElementById('svcImgPreviewWrap');
+    var previewImg = document.getElementById('svcImgPreview');
+    var clearWrap = document.getElementById('svcClearImgWrap');
+    var countryTs = null;
+
+    function hidePreview(){
+      if (previewImg) previewImg.src = '';
+      if (previewWrap) previewWrap.classList.add('d-none');
+      if (clearWrap) clearWrap.classList.add('d-none');
+      if (fileInput) fileInput.value = '';
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function(){
+        var f = fileInput.files && fileInput.files[0];
+        if (!f) { hidePreview(); return; }
+        if (previewImg) previewImg.src = URL.createObjectURL(f);
+        if (previewWrap) previewWrap.classList.remove('d-none');
+        if (clearWrap) clearWrap.classList.add('d-none');
+        var c = document.getElementById('svc_clear_image');
+        if (c) c.checked = false;
+      });
+    }
+
+    function flagUrlForCode(code){
+      var c = String(code || '').toLowerCase();
+      if (!c) return '';
+      return 'https://flagcdn.com/w40/' + c + '.png';
+    }
+
+    if (countrySel) {
+      loadTomSelectScript(function(){
+        if (typeof window.TomSelect === 'undefined') return;
+        countryTs = new window.TomSelect(countrySel, {
+          allowEmptyOption: true,
+          create: false,
+          plugins: ['clear_button'],
+          placeholder: 'Select Country',
+          render: {
+            option: function(data, escape){
+              var code = (data.value || '').toLowerCase();
+              if (!code) {
+                return '<div class="px-2 py-1 text-white-50">Select Country</div>';
+              }
+              var u = flagUrlForCode(code);
+              return (
+                '<div class="d-flex align-items-center gap-2 py-1 px-1">'
+                  + '<img src="'+u+'" alt="" width="28" height="18" class="rounded border border-secondary flex-shrink-0" style="object-fit:cover"/>'
+                  + '<span class="flex-grow-1 text-truncate">'+escape(data.text)+'</span>'
+                  + '<span class="text-white-50 small flex-shrink-0">'+escape(data.value)+'</span>'
+                + '</div>'
+              );
+            },
+            item: function(data, escape){
+              var code = (data.value || '').toLowerCase();
+              if (!code) {
+                return '<div class="text-white-50">Select Country</div>';
+              }
+              var u = flagUrlForCode(code);
+              return (
+                '<div class="d-flex align-items-center gap-2">'
+                  + '<img src="'+u+'" alt="" width="22" height="15" class="rounded border border-secondary flex-shrink-0" style="object-fit:cover"/>'
+                  + '<span class="text-truncate">'+escape(data.text)+'</span>'
+                + '</div>'
+              );
+            }
+          }
+        });
+      });
+    }
+
+    function applyCountry(val){
+      var v = String(val || '').trim();
+      function sync(){
+        if (countryTs) {
+          if (!v) countryTs.clear(true);
+          else countryTs.setValue(v, true);
+        } else if (countrySel) {
+          countrySel.value = v;
+        }
+      }
+      sync();
+      if (countrySel && !countryTs) {
+        var tries = 0;
+        var id = setInterval(function(){
+          tries++;
+          if (countryTs) {
+            clearInterval(id);
+            if (!v) countryTs.clear(true);
+            else countryTs.setValue(v, true);
+          } else if (tries > 80) clearInterval(id);
+        }, 25);
+      }
+    }
+
+    modal.addEventListener('show.bs.modal', function(ev){
+      var btn = ev.relatedTarget;
+      var mode = btn && btn.getAttribute('data-mode') === 'edit' ? 'edit' : 'create';
+      form.reset();
+      document.getElementById('svc_id').value = '';
+      hidePreview();
+
+      var urlCreate = form.getAttribute('data-url-create') || '';
+      var urlUpdate = form.getAttribute('data-url-update') || '';
+      form.setAttribute('action', mode === 'edit' ? urlUpdate : urlCreate);
+
+      var cc = '';
+      if (mode === 'edit' && btn) {
+        document.getElementById('svc_id').value = btn.getAttribute('data-id') || '';
+        document.getElementById('svc_icon').value = btn.getAttribute('data-icon') || '';
+        document.getElementById('svc_title').value = btn.getAttribute('data-title') || '';
+        document.getElementById('svc_desc').value = btn.getAttribute('data-description') || '';
+        document.getElementById('svc_link').value = btn.getAttribute('data-link') || '';
+        document.getElementById('svc_sort').value = btn.getAttribute('data-sort') || '0';
+        document.getElementById('svc_active').value = btn.getAttribute('data-active') || '1';
+        var iu = btn.getAttribute('data-image_url') || '';
+        if (iu && previewImg && previewWrap) {
+          previewImg.src = iu;
+          previewWrap.classList.remove('d-none');
+          if (clearWrap) clearWrap.classList.remove('d-none');
+        }
+        var clr = document.getElementById('svc_clear_image');
+        if (clr) clr.checked = false;
+        cc = btn.getAttribute('data-country-code') || '';
+      }
+      applyCountry(cc);
+    });
   }
 
   function initNavigationOrdering(){

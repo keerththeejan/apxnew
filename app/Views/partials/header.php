@@ -48,6 +48,8 @@ $logoPath = (string) ($settings['site_logo_path'] ?? '/images/logo.png');
 $themeEnabled = (($settings['theme_enabled'] ?? '1') === '1');
 $themeSwitcherEnabled = (($settings['theme_switcher_enabled'] ?? '1') === '1');
 $clockEnabled = (($settings['clock_enabled'] ?? '0') === '1');
+$waNumber = (string) ($settings['whatsapp_number'] ?? '');
+$waDigits = preg_replace('/\D/', '', $waNumber) ?? '';
 $navLinks = $navMenu['links'] ?? [];
 $navCtas = $navMenu['ctas'] ?? [];
 if ($navCtas === []) {
@@ -76,6 +78,9 @@ if ($navCtas === []) {
       <div class="top-contact-left">
         <a class="top-contact-link" href="mailto:<?= e($settings['contact_email'] ?? 'info@apx.com') ?>" aria-label="Email">✉️ <?= e($settings['contact_email'] ?? 'info@apx.com') ?></a>
         <a class="top-contact-link" href="tel:<?= e($settings['contact_phone'] ?? '+94770000000') ?>" aria-label="Phone">📞 <?= e($settings['contact_phone_label'] ?? '+94 77 000 0000') ?></a>
+        <?php if ($waDigits !== ''): ?>
+          <a class="top-contact-link top-contact-whatsapp" href="https://wa.me/<?= e($waDigits) ?>" target="_blank" rel="noopener" aria-label="Send via WhatsApp" title="Send via WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        <?php endif; ?>
         <?php if ($clockEnabled): ?>
           <time class="live-clock" id="liveClock" datetime="" aria-live="polite">--:--:--</time>
         <?php endif; ?>

@@ -9,6 +9,9 @@ view('layouts.admin', [
     'crumb' => $crumb ?? 'APX / Services',
     'contentView' => __FILE__ . '.content',
     'q' => $q ?? '',
+    'countryFilter' => $countryFilter ?? '',
+    'countryCodesInUse' => $countryCodesInUse ?? [],
+    'countriesJson' => $countriesJson ?? [],
     'services' => $services ?? [],
     'total' => $total ?? 0,
     'page' => $page ?? 1,
@@ -17,4 +20,7 @@ view('layouts.admin', [
     'flashSuccess' => $flashSuccess ?? null,
     'flashError' => $flashError ?? null,
     'servicesImageColumn' => $servicesImageColumn ?? true,
+    'servicesCountryColumn' => $servicesCountryColumn ?? true,
+    'whatsappNumber' => $whatsappNumber ?? '',
+    'extraHead' => $extraHead ?? '',
 ]);
