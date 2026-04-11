@@ -7,6 +7,38 @@ $v = static function (string $key, string $default = '') use ($s): string {
     return (string) ($s[$key] ?? $default);
 };
 
+/** Prefer DB setting; if empty, show .env value for display (save copies into DB). */
+$ve = static function (string $key, string $envKey, string $default = '') use ($v): string {
+    $db = trim($v($key, ''));
+    if ($db !== '') {
+        return $db;
+    }
+    $e = env($envKey, $default);
+
+    return trim((string) ($e !== null && $e !== '' ? $e : $default));
+};
+
+$mailSsl = $v('mail_ssl_verify', '');
+if ($mailSsl === '') {
+    $ev = strtolower(trim((string) env('MAIL_SSL_VERIFY', '1')));
+    $mailSsl = in_array($ev, ['0', 'false', 'no', 'off'], true) ? '0' : '1';
+} else {
+    $mailSsl = $mailSsl === '1' ? '1' : '0';
+}
+
+$mailFromDisplay = trim($v('mail_from_address', ''));
+if ($mailFromDisplay === '') {
+    $mailFromDisplay = trim((string) (env('MAIL_FROM_ADDRESS', '') ?? ''));
+}
+if ($mailFromDisplay === '') {
+    $mailFromDisplay = trim((string) (env('MAIL_FROM', '') ?? ''));
+}
+
+$mailTestTo = trim($v('mail_test_to', ''));
+if ($mailTestTo === '') {
+    $mailTestTo = 'keerththeejan@gmail.com';
+}
+
 $socialRows = [];
 $rawSocial = $v('social_links_json', '');
 if ($rawSocial !== '') {
@@ -52,7 +84,7 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
         <div class="sf-card-header">
           <h2 class="sf-card-title">Configuration</h2>
           <div class="d-flex align-items-center gap-2">
-            <div class="sf-card-meta">Brand, appearance, contact, and security</div>
+            <div class="sf-card-meta">Brand, appearance, outgoing email, contact, and security</div>
             <a class="btn btn-outline-success btn-sm" href="<?= e(base_url('/admin/settings/whatsapp')) ?>"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
           </div>
         </div>
@@ -66,6 +98,9 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-advanced" data-bs-toggle="tab" data-bs-target="#pane-advanced" type="button" role="tab">Appearance</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-email" data-bs-toggle="tab" data-bs-target="#pane-email" type="button" role="tab">Email</button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-security" data-bs-toggle="tab" data-bs-target="#pane-security" type="button" role="tab">Security</button>
@@ -243,6 +278,64 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
                 </div>
               </div>
 
+              <div class="tab-pane fade" id="pane-email" role="tabpanel">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <h3 class="h6 text-white-50 text-uppercase mb-1">Outgoing mail (SMTP)</h3>
+                    <p class="small text-white-50 mb-0">Used for password reset and booking emails. Values are stored in the database; if a field is empty here, the matching <code>MAIL_*</code> entry in <code>.env</code> is used. Server uses SSL on port <strong>465</strong> (e.g. <code>mail.apx.lk</code>).</p>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">SMTP host</label>
+                    <input class="form-control" name="mail_host" value="<?= e($ve('mail_host', 'MAIL_HOST')) ?>" placeholder="mail.apx.lk" autocomplete="off" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">SMTP port</label>
+                    <input class="form-control" type="number" min="1" max="65535" name="mail_port" value="<?= e($ve('mail_port', 'MAIL_PORT', '465')) ?>" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">SMTP username</label>
+                    <input class="form-control" name="mail_username" value="<?= e($ve('mail_username', 'MAIL_USERNAME')) ?>" placeholder="info@apx.lk" autocomplete="off" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">SMTP password</label>
+                    <input class="form-control" type="password" name="mail_password" value="" autocomplete="new-password" placeholder="Leave blank to keep current" />
+                    <div class="form-text text-white-50 small">Never shown after save. Set here or in <code>MAIL_PASSWORD</code> in <code>.env</code> (quote the value if it contains <code>#</code>).</div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">From address</label>
+                    <input type="email" class="form-control" name="mail_from_address" value="<?= e($mailFromDisplay) ?>" placeholder="info@apx.lk" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">From name (optional)</label>
+                    <input class="form-control" name="mail_from_name" value="<?= e($ve('mail_from_name', 'MAIL_FROM_NAME')) ?>" placeholder="APX" />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">EHLO domain (optional)</label>
+                    <input class="form-control" name="mail_ehlo_domain" value="<?= e($ve('mail_ehlo_domain', 'MAIL_EHLO_DOMAIN')) ?>" placeholder="apx.lk" autocomplete="off" />
+                    <div class="form-text text-white-50 small">Usually the domain part of your from address; leave empty to auto-detect.</div>
+                  </div>
+                  <div class="col-12">
+                    <input type="hidden" name="mail_ssl_verify" value="0" />
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" name="mail_ssl_verify" id="setMailSslVerify" value="1" <?= $mailSsl === '1' ? 'checked' : '' ?> />
+                      <label class="form-check-label fw-bold" for="setMailSslVerify">Verify TLS certificate</label>
+                    </div>
+                    <div class="form-text text-white-50 small">Turn off only for local debugging if SSL verification fails.</div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold">Test email recipient</label>
+                    <input type="email" class="form-control" id="mailTestTo" name="mail_test_to" value="<?= e($mailTestTo) ?>" placeholder="name@gmail.com" autocomplete="off" />
+                    <div class="form-text text-white-50 small">Saved when you save configuration. Default is set to keerththeejan@gmail.com until you change it.</div>
+                  </div>
+                  <div class="col-12 col-md-6 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-info" id="btnMailTest"><i class="bi bi-send me-1"></i>Send test email</button>
+                  </div>
+                  <div class="col-12">
+                    <p class="text-white-50 small mb-0"><i class="bi bi-info-circle me-1"></i>Check <code>storage/logs/mail.log</code> if messages fail to send.</p>
+                  </div>
+                </div>
+              </div>
+
               <div class="tab-pane fade" id="pane-security" role="tabpanel">
                 <div class="row g-3">
                   <div class="col-12 col-md-6">
@@ -282,6 +375,35 @@ $logoPreview = $v('site_logo_path', '/images/logo.png');
         var r = new FileReader();
         r.onload = function(){ prev.src = r.result; };
         r.readAsDataURL(f);
+      });
+    }
+    var btnMail = document.getElementById('btnMailTest');
+    var mailTo = document.getElementById('mailTestTo');
+    var flashEl = document.getElementById('settingsAjaxFlash');
+    if (btnMail && form && mailTo) {
+      btnMail.addEventListener('click', function(){
+        var tokenInp = form.querySelector('input[name="_token"]');
+        if (!tokenInp) return;
+        btnMail.disabled = true;
+        var fd = new URLSearchParams();
+        fd.set('_token', tokenInp.value);
+        fd.set('to', mailTo.value.trim());
+        fetch('<?= e(base_url('/admin/settings/email/test')) ?>', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: fd.toString()
+        }).then(function(res){ return res.json().then(function(j){ return { res: res, j: j }; }); })
+        .then(function(x){
+          if (!flashEl) return;
+          var ok = x.j && x.j.ok;
+          var msg = (x.j && x.j.message) ? String(x.j.message) : 'Request failed';
+          var esc = document.createElement('div');
+          esc.textContent = msg;
+          flashEl.innerHTML = '<div class="alert alert-' + (ok ? 'success' : 'danger') + ' mb-0">' + esc.innerHTML + '</div>';
+          flashEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }).catch(function(){
+          if (flashEl) flashEl.innerHTML = '<div class="alert alert-danger mb-0">Network error.</div>';
+        }).finally(function(){ btnMail.disabled = false; });
       });
     }
   })();

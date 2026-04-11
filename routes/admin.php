@@ -169,6 +169,7 @@ $router->get('/admin/users/export', [UsersController::class, 'exportCsv']);
 $router->get('/admin/settings.html', [SettingsController::class, 'htmlAlias']);
 $router->get('/admin/settings', [SettingsController::class, 'index']);
 $router->post('/admin/settings/save', [SettingsController::class, 'save']);
+$router->post('/admin/settings/email/test', [SettingsController::class, 'sendTestEmail']);
 $router->get('/admin/settings/whatsapp', [SettingsController::class, 'whatsapp']);
 $router->post('/admin/settings/whatsapp/save', [SettingsController::class, 'saveWhatsapp']);
 $router->post('/admin/settings/whatsapp/send', [SettingsController::class, 'sendWhatsapp']);

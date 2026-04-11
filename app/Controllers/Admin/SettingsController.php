@@ -10,6 +10,8 @@ use App\Models\ActivityLog;
 use App\Models\AdminNotification;
 use App\Models\Setting;
 use App\Models\WhatsAppLog;
+use App\Services\Mailer;
+use App\Services\SiteConfig;
 use App\Services\WhatsAppService;
 
 final class SettingsController extends AdminBaseController
@@ -104,6 +106,20 @@ final class SettingsController extends AdminBaseController
         Setting::set('clock_time_format', $clockFmt);
         Setting::set('vehicle_booking_module_enabled', Request::post('vehicle_booking_module_enabled') === '1' ? '1' : '0');
 
+        Setting::set('mail_ssl_verify', Request::post('mail_ssl_verify') === '1' ? '1' : '0');
+
+        $mailPort = (int) Request::post('mail_port', 465);
+        if ($mailPort < 1 || $mailPort > 65535) {
+            $this->respondSave(false, 'Invalid SMTP port (use 1–65535, e.g. 465).');
+            return;
+        }
+        Setting::set('mail_port', (string) $mailPort);
+
+        $passNew = trim((string) Request::post('mail_password', ''));
+        if ($passNew !== '') {
+            Setting::set('mail_password', $passNew);
+        }
+
         // Keep legacy default_theme in sync for any code still reading it.
         if ($themeMode === 'dark') {
             Setting::set('default_theme', 'dark');
@@ -132,6 +148,12 @@ final class SettingsController extends AdminBaseController
             'nav_apply_url',
             'nav_contact_label',
             'nav_contact_url',
+            'mail_host',
+            'mail_username',
+            'mail_from_address',
+            'mail_from_name',
+            'mail_ehlo_domain',
+            'mail_test_to',
         ];
 
         foreach ($stringKeys as $k) {
@@ -151,13 +173,77 @@ final class SettingsController extends AdminBaseController
                 'settings.save',
                 'settings',
                 null,
-                ['keys' => 'site+advanced+security']
+                ['keys' => 'site+appearance+security+email']
             );
             AdminNotification::create('Site settings were updated.', 'info');
         } catch (\Throwable $e) {
         }
 
         $this->respondSave(true, 'Settings saved successfully.');
+    }
+
+    public function sendTestEmail(): void
+    {
+        $this->requireSuperAdmin();
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!Csrf::verify((string) Request::post('_token', ''))) {
+            http_response_code(419);
+            echo json_encode(['ok' => false, 'message' => 'CSRF token mismatch'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $to = trim((string) Request::post('to', ''));
+        if ($to === '' || filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'message' => 'Enter a valid email address.'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $host = trim(SiteConfig::get('mail_host', ''));
+        if ($host === '') {
+            $host = trim((string) (env('MAIL_HOST', '') ?? ''));
+        }
+        if ($host === '') {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'message' => 'Set SMTP host in the Email tab or MAIL_HOST in .env.'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        $s = Setting::allKeyed();
+        $site = trim((string) ($s['site_name'] ?? 'APX'));
+        $subject = $site . ' — mail test';
+        $body = "This is a test email from {$site}.\n\n"
+            . 'Sent at: ' . gmdate('Y-m-d H:i:s') . " UTC\n"
+            . "If you received this, SMTP authentication and delivery are working.\n";
+
+        $ok = Mailer::send($to, $subject, $body);
+
+        if ($ok) {
+            try {
+                ActivityLog::record(
+                    isset($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null,
+                    'settings.email.test',
+                    'settings',
+                    null,
+                    ['to' => $to]
+                );
+            } catch (\Throwable) {
+            }
+            echo json_encode(['ok' => true, 'message' => 'Test email sent. Check the inbox (and spam) for ' . $to . '.'], JSON_UNESCAPED_UNICODE);
+
+            return;
+        }
+
+        http_response_code(422);
+        echo json_encode([
+            'ok' => false,
+            'message' => 'Send failed. Confirm SMTP user, password, and port 465 SSL. See storage/logs/mail.log for details.',
+        ], JSON_UNESCAPED_UNICODE);
     }
 
     public function saveWhatsapp(): void

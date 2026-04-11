@@ -60,13 +60,8 @@ final class VehicleBookingNotificationService
         if ($to === '') {
             return;
         }
-        $headers = [
-            'MIME-Version: 1.0',
-            'Content-type: text/plain; charset=UTF-8',
-            'From: no-reply@apx.local',
-        ];
         try {
-            @mail($to, $subject, $body, implode("\r\n", $headers));
+            Mailer::send($to, $subject, $body);
         } catch (\Throwable) {
         }
     }
