@@ -1,0 +1,18 @@
+APX Contact Hub — Deployment
+==========================
+
+1. Upload index.html to: https://apx.lk/contact
+   (e.g. host at https://apx.lk/contact/ or https://apx.lk/contact/index.html)
+
+2. The QR code encodes: https://apx.lk/contact
+
+3. To use a different URL, regenerate with:
+   HUB_URL=https://your-domain.com/contact npm run generate:hub
+
+4. Files in this folder:
+   - index.html          (landing page)
+   - qr-card.html        (printable QR card)
+   - apx-contact-hub-qr.png
+   - apx-contact-hub-qr-preview.png
+   - apx-contact-hub-qr.svg
+   - qr-url.txt          (encoded URL)

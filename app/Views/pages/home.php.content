@@ -20,7 +20,7 @@ if (!function_exists('apx_home_banner_slide_markup')) {
     {
         $showImg = (int) ($b['show_image'] ?? 1) === 1;
         $bg = trim((string) ($b['image_path'] ?? ''));
-        $classes = 'hero hero-home hero-banner-slide';
+        $classes = 'hero hero-home hero-banner-slide hero-home--premium';
         if (!$showImg || $bg === '') {
             $classes .= ' hero-banner--text-only';
         }
@@ -58,11 +58,12 @@ if (!function_exists('apx_home_banner_slide_markup')) {
         ?>
   <section<?= $attr ?> aria-label="Hero">
     <div class="container hero-inner">
-      <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
-      <?php if ($heroSub !== ''): ?>
-        <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
+      <h1 class="hero-title js-reveal"><?= e(apx_hero_display_title($heroTitle, $settings)) ?></h1>
+      <?php $displaySub = apx_hero_display_subtitle($heroSub, $settings); ?>
+      <?php if ($displaySub !== ''): ?>
+        <p class="hero-sub js-reveal"><?= e($displaySub) ?></p>
       <?php endif; ?>
-      <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
+      <div class="d-flex flex-wrap justify-content-center gap-3 js-reveal hero-actions">
         <?php if ($p1 !== ''): ?>
           <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
         <?php endif; ?>
@@ -109,7 +110,7 @@ if (!function_exists('apx_home_banner_slide_markup')) {
           <?php
             $showImg = (int) ($b['show_image'] ?? 1) === 1;
             $bg = trim((string) ($b['image_path'] ?? ''));
-            $classes = 'hero hero-home hero-banner-slide h-100';
+            $classes = 'hero hero-home hero-banner-slide hero-home--premium h-100';
             if (!$showImg || $bg === '') {
                 $classes .= ' hero-banner--text-only';
             }
@@ -145,11 +146,12 @@ if (!function_exists('apx_home_banner_slide_markup')) {
           ?>
           <section<?= $attr ?> aria-label="Hero slide <?= (int) ($idx + 1) ?>">
             <div class="container hero-inner">
-              <h1 class="hero-title js-reveal"><?= e($heroTitle) ?></h1>
-              <?php if ($heroSub !== ''): ?>
-                <p class="hero-sub js-reveal"><?= e($heroSub) ?></p>
+              <h1 class="hero-title js-reveal"><?= e(apx_hero_display_title($heroTitle, $settings)) ?></h1>
+              <?php $displaySub = apx_hero_display_subtitle($heroSub, $settings); ?>
+              <?php if ($displaySub !== ''): ?>
+                <p class="hero-sub js-reveal"><?= e($displaySub) ?></p>
               <?php endif; ?>
-              <div class="d-flex flex-wrap justify-content-center gap-2 js-reveal hero-actions">
+              <div class="d-flex flex-wrap justify-content-center gap-3 js-reveal hero-actions">
                 <?php if ($p1 !== ''): ?>
                   <a class="btn btn-cta px-4" href="<?= e(resolve_public_href($pu1)) ?>"><?= e($p1) ?></a>
                 <?php endif; ?>

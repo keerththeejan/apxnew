@@ -6,3 +6,11 @@ If you received this, SMTP authentication and delivery are working.
 
 [ok]
 ---
+2026-04-12T05:38:07+00:00 | To: keerththeejan@gmail.com | APX — mail test
+This is a test email from APX.
+
+Sent at: 2026-04-12 05:38:07 UTC
+If you received this, SMTP authentication and delivery are working.
+
+[ok]
+---

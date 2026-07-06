@@ -1,0 +1,379 @@
+/**
+ * APX Homepage — premium travel agency redesign.
+ * Scoped to .page-home only; no business logic changes.
+ */
+
+.page-home {
+  --home-hero-h: 85vh;
+  --home-nav-h: 80px;
+  --home-pad-x: 24px;
+  --home-title-mobile: 32px;
+  --home-title-tablet: 42px;
+  --home-title-desktop: 60px;
+  --home-btn-h: 52px;
+}
+
+/* —— Header (home context; global overrides in apx-premium) —— */
+.page-home .top-contact-inner {
+  padding-left: var(--home-pad-x);
+  padding-right: var(--home-pad-x);
+  min-height: 40px;
+  gap: 16px;
+}
+
+.page-home .top-contact-left {
+  gap: 20px;
+}
+
+.page-home .navbar-shell {
+  min-height: var(--home-nav-h);
+  padding: 0 var(--home-pad-x);
+  align-items: center;
+}
+
+.page-home .brand {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: min(180px, 34vw);
+  margin-right: 12px;
+  overflow: hidden;
+}
+
+.page-home .brand img,
+.page-home .brand-logo {
+  height: 58px;
+  max-height: 58px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.page-home .primary-links {
+  gap: 0 16px;
+}
+
+.page-home .primary-links > .nav-item > .nav-link {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  min-height: var(--home-nav-h);
+  padding: 0 14px;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.page-home .primary-links > .nav-item > .nav-link:not(.dropdown-toggle)::after,
+.page-home .primary-links > .nav-item > .nav-link.dropdown-toggle::before {
+  bottom: 22px;
+  height: 3px;
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: 1;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-home .primary-links > .nav-item > .nav-link:not(.dropdown-toggle):hover::after,
+.page-home .primary-links > .nav-item > .nav-link:not(.dropdown-toggle).is-active::after,
+.page-home .primary-links > .nav-item > .nav-link.dropdown-toggle:hover::before,
+.page-home .primary-links > .nav-item > .nav-link.dropdown-toggle.is-active::before {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, var(--orange), var(--blue));
+}
+
+.page-home .nav-cta .btn {
+  min-height: 44px;
+  height: 44px;
+  min-width: 128px;
+  width: auto;
+  max-width: none;
+  padding: 0 20px;
+  font-size: 13px;
+  border-radius: 50px;
+}
+
+.page-home .nav-cta .btn-cta-outline {
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: transparent;
+}
+
+.page-home .nav-cta .btn-cta-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+/* —— Hero shell —— */
+.page-home .hero-home,
+.page-home .hero-home.hero-banner-slide {
+  min-height: var(--home-hero-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-home .hero-home.hero-banner--text-only,
+.page-home .hero-home--premium.hero-banner--text-only {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.78) 0%, rgba(15, 23, 42, 0.55) 45%, rgba(2, 6, 23, 0.72) 100%),
+    url("../images/hero.jpg") center center / cover no-repeat;
+}
+
+.page-home .hero-home::before,
+.page-home .hero-home.hero-banner-slide::before {
+  background: linear-gradient(
+    180deg,
+    rgba(2, 6, 23, 0.55) 0%,
+    rgba(2, 6, 23, 0.35) 40%,
+    rgba(2, 6, 23, 0.65) 100%
+  );
+}
+
+.page-home .hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--home-hero-h);
+  padding: 112px var(--home-pad-x) 48px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-home .home-hero-carousel {
+  min-height: var(--home-hero-h);
+}
+
+.page-home .home-hero-carousel .carousel-inner,
+.page-home .home-hero-carousel .carousel-item,
+.page-home .home-hero-carousel .carousel-item .hero-banner-slide {
+  min-height: var(--home-hero-h);
+}
+
+/* —— Hero typography —— */
+.page-home .hero-title {
+  font-family: "Manrope", "Inter", system-ui, sans-serif;
+  font-size: var(--home-title-mobile);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  line-height: 1.1;
+  margin: 0 0 16px;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  max-width: 16ch;
+}
+
+.page-home .hero-sub {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 38rem;
+  margin: 0 auto 28px;
+}
+
+/* Staggered fade-in */
+.page-home .hero-inner .hero-title.js-reveal { transition-delay: 0.08s; }
+.page-home .hero-inner .hero-sub.js-reveal { transition-delay: 0.18s; }
+.page-home .hero-inner .hero-actions.js-reveal { transition-delay: 0.28s; }
+
+.page-home.apx-page-loaded .hero-inner .js-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-home.apx-page-loaded .hero-inner .js-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* —— Hero CTAs —— */
+.page-home .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 0;
+  width: 100%;
+}
+
+.page-home .hero-actions .btn {
+  min-height: var(--home-btn-h);
+  height: var(--home-btn-h);
+  border-radius: 50px;
+  padding: 0 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.page-home .hero-actions .btn-cta {
+  background: linear-gradient(90deg, var(--orange), var(--blue));
+  border: none;
+  color: #fff;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.28);
+}
+
+.page-home .hero-actions .btn-cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.35);
+  color: #fff;
+  filter: saturate(1.08);
+}
+
+.page-home .hero-actions .btn-cta-outline {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  color: #fff;
+  box-shadow: none;
+}
+
+.page-home .hero-actions .btn-cta-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+  transform: translateY(-3px);
+  color: #fff;
+}
+
+.page-home .hero-actions .btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 3px;
+}
+
+/* —— Home sections spacing (8px grid) —— */
+.page-home section.py-5 {
+  padding-top: 48px !important;
+  padding-bottom: 48px !important;
+}
+
+.page-home section.py-4 {
+  padding-top: 32px !important;
+  padding-bottom: 32px !important;
+}
+
+.page-home .text-center.mb-4 {
+  margin-bottom: 32px !important;
+}
+
+.page-home .glass-panel {
+  padding: 32px 24px;
+  border-radius: 20px;
+}
+
+.page-home .home-cta {
+  margin: 32px 0 0;
+}
+
+.page-home .home-cta-inner {
+  padding: 32px 24px;
+}
+
+.page-home #apply.mt-5 {
+  margin-top: 48px !important;
+}
+
+.page-home #news.pt-5 {
+  padding-top: 48px !important;
+}
+
+/* —— Tablet —— */
+@media (min-width: 768px) {
+  .page-home .hero-title {
+    font-size: var(--home-title-tablet);
+    max-width: 20ch;
+  }
+
+  .page-home .hero-sub {
+    font-size: 1.125rem;
+  }
+
+  .page-home .hero-actions {
+    gap: 16px;
+  }
+}
+
+/* —— Desktop —— */
+@media (min-width: 992px) {
+  .page-home .hero-title {
+    font-size: var(--home-title-desktop);
+    max-width: none;
+  }
+
+  .page-home .hero-actions {
+    flex-wrap: nowrap;
+    gap: 16px;
+    width: auto;
+  }
+
+  .page-home .hero-actions .btn {
+    min-width: 160px;
+    width: auto;
+  }
+}
+
+/* —— Mobile —— */
+@media (max-width: 991px) {
+  .page-home .brand img,
+  .page-home .brand-logo {
+    height: 48px;
+    max-height: 48px;
+  }
+
+  .page-home .navbar-shell {
+    min-height: 72px;
+  }
+
+  .page-home .hero-inner {
+    padding-top: 100px;
+    padding-bottom: 40px;
+    min-height: calc(var(--home-hero-h) - 20px);
+  }
+
+  .page-home .hero-actions {
+    flex-direction: column;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .page-home .hero-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 575px) {
+  .page-home {
+    --home-pad-x: 16px;
+  }
+
+  .page-home .hero-title {
+    font-size: var(--home-title-mobile);
+  }
+}
+
+@media (min-width: 1920px) {
+  .page-home .hero-inner {
+    max-width: 1000px;
+  }
+
+  .page-home .container {
+    max-width: 1280px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home .hero-inner .js-reveal {
+    transition-delay: 0s !important;
+  }
+}

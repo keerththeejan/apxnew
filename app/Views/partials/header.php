@@ -139,8 +139,8 @@ if ($navCtas === []) {
   <div class="top-contact-bar">
     <div class="top-contact-inner">
       <div class="top-contact-left">
-        <a class="top-contact-link" href="mailto:<?= e($settings['contact_email'] ?? 'info@apx.com') ?>" aria-label="Email">✉️ <?= e($settings['contact_email'] ?? 'info@apx.com') ?></a>
-        <a class="top-contact-link" href="tel:<?= e($settings['contact_phone'] ?? '+94770000000') ?>" aria-label="Phone">📞 <?= e($settings['contact_phone_label'] ?? '+94 77 000 0000') ?></a>
+        <a class="top-contact-link" href="mailto:<?= e($settings['contact_email'] ?? 'info@apx.com') ?>" aria-label="Email us at <?= e($settings['contact_email'] ?? 'info@apx.com') ?>"><i class="bi bi-envelope" aria-hidden="true"></i><span><?= e($settings['contact_email'] ?? 'info@apx.com') ?></span></a>
+        <a class="top-contact-link" href="tel:<?= e($settings['contact_phone'] ?? '+94770000000') ?>" aria-label="Call <?= e($settings['contact_phone_label'] ?? '+94 77 000 0000') ?>"><i class="bi bi-telephone" aria-hidden="true"></i><span><?= e($settings['contact_phone_label'] ?? '+94 77 000 0000') ?></span></a>
         <?php if ($waDigits !== ''): ?>
           <a class="top-contact-link top-contact-whatsapp" href="https://wa.me/<?= e($waDigits) ?>" target="_blank" rel="noopener" aria-label="Send via WhatsApp" title="Send via WhatsApp"><i class="bi bi-whatsapp"></i></a>
         <?php endif; ?>
@@ -154,11 +154,12 @@ if ($navCtas === []) {
             <?php
               $slabel = (string) ($soc['label'] ?? '');
               $surl = (string) ($soc['url'] ?? '#');
-              $hint = mb_substr($slabel, 0, 1) ?: '·';
+              $sicon = (string) ($soc['icon'] ?? '');
+              $biClass = apx_social_bi_class($slabel, $sicon);
             ?>
-            <a class="top-social" href="<?= e(resolve_public_href($surl)) ?>" aria-label="<?= e($slabel) ?>" title="<?= e($slabel) ?>" rel="noopener"><?= e($hint) ?></a>
+            <a class="top-social" href="<?= e(resolve_public_href($surl)) ?>" aria-label="<?= e($slabel) ?>" title="<?= e($slabel) ?>" rel="noopener"><i class="bi <?= e($biClass) ?>" aria-hidden="true"></i></a>
           <?php endforeach; ?>
-          <a class="top-social" href="<?= e(base_url('/admin/login')) ?>" aria-label="Admin login" title="Admin login">A</a>
+          <a class="top-social" href="<?= e(base_url('/admin/login')) ?>" aria-label="Admin login" title="Admin login"><i class="bi bi-shield-lock" aria-hidden="true"></i></a>
           <?php if ($themeEnabled && $themeSwitcherEnabled): ?>
           <button type="button" class="top-social theme-toggle" id="themeToggle" data-apx-theme="light" aria-label="Toggle theme" title="Theme">
             <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
@@ -171,7 +172,7 @@ if ($navCtas === []) {
 
   <div class="navbar-shell">
       <a class="brand" href="<?= e(base_url('/')) ?>" aria-label="Home">
-        <img src="<?= e(base_url(ltrim($logoPath, '/'))) ?>" alt="<?= e($settings['site_name'] ?? 'APX') ?> logo" width="180" height="60" loading="eager" decoding="async" />
+        <img class="brand-logo" src="<?= e(base_url(ltrim($logoPath, '/'))) ?>" alt="<?= e($settings['site_name'] ?? 'APX') ?> logo" width="160" height="58" loading="eager" decoding="async" />
       </a>
 
       <button class="hamb" type="button" aria-expanded="false" aria-controls="navbar-menu" aria-label="Open menu">Menu</button>

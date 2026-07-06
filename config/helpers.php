@@ -106,3 +106,77 @@ function csrf_field(): string
     $token = Csrf::token();
     return '<input type="hidden" name="_token" value="' . e($token) . '">';
 }
+
+/**
+ * Cache-busted public asset URL (filemtime).
+ */
+function asset_url(string $path): string
+{
+    $path = '/' . ltrim($path, '/');
+    $full = __DIR__ . '/..' . $path;
+    $v = is_file($full) ? (string) filemtime($full) : (string) time();
+
+    return base_url($path) . '?v=' . $v;
+}
+
+/**
+ * Bootstrap Icons class for a social link label/icon key.
+ */
+function apx_social_bi_class(string $label, string $icon = ''): string
+{
+    $icon = strtolower(trim($icon));
+    $label = strtolower(trim($label));
+    $map = [
+        'facebook' => 'bi-facebook',
+        'instagram' => 'bi-instagram',
+        'youtube' => 'bi-youtube',
+        'tiktok' => 'bi-tiktok',
+        'twitter' => 'bi-twitter-x',
+        'x' => 'bi-twitter-x',
+        'linkedin' => 'bi-linkedin',
+        'whatsapp' => 'bi-whatsapp',
+    ];
+    if ($icon !== '' && isset($map[$icon])) {
+        return $map[$icon];
+    }
+    foreach ($map as $key => $cls) {
+        if (str_contains($label, $key)) {
+            return $cls;
+        }
+    }
+
+    return 'bi-link-45deg';
+}
+
+/**
+ * Presentation-only hero title (does not alter stored CMS data).
+ */
+function apx_hero_display_title(string $title, array $settings = []): string
+{
+    $t = trim($title);
+    if ($t === '' || preg_match('/^hello\s+apx$/i', $t) === 1) {
+        return 'Travel the World with Confidence';
+    }
+    if (strcasecmp($t, 'home') === 0) {
+        return 'Travel the World with Confidence';
+    }
+
+    return $t;
+}
+
+/**
+ * Presentation-only hero subtitle with professional fallback.
+ */
+function apx_hero_display_subtitle(string $subtitle, array $settings = []): string
+{
+    $s = trim($subtitle);
+    if ($s !== '') {
+        return $s;
+    }
+    $fromSettings = trim((string) ($settings['home_hero_subtitle'] ?? ''));
+    if ($fromSettings !== '') {
+        return $fromSettings;
+    }
+
+    return 'Visas, flights, hotels, insurance and vehicle booking — expertly managed for a seamless journey.';
+}

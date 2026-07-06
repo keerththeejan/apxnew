@@ -9,7 +9,7 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-12 col-lg-8 js-reveal">
-        <div class="card shadow-sm" style="border-radius:18px">
+        <div class="card shadow-sm glass-card border-0">
           <div class="card-body p-4">
             <h2 class="fw-bold mb-1">Send a message</h2>
             <p class="text-secondary mb-3">We’ll get back to you shortly.</p>
@@ -46,8 +46,8 @@
                   <?php if (!empty($flashErrors['message'])): ?><div class="text-danger small mt-1"><?= e($flashErrors['message'][0]) ?></div><?php endif; ?>
                 </div>
                 <div class="col-12 d-flex gap-2">
-                  <button class="btn btn-primary px-4" type="submit">Send</button>
-                  <button class="btn btn-outline-secondary" type="reset">Reset</button>
+                  <button class="btn btn-cta px-4" type="submit">Send</button>
+                  <button class="btn btn-outline-secondary rounded-pill" type="reset">Reset</button>
                 </div>
               </div>
             </form>
