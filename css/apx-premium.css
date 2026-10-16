@@ -527,15 +527,14 @@ img:not([loading="lazy"]) {
   padding: clamp(2rem, 4vw, 3rem) 18px;
 }
 .footer-col h4 {
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .footer-col a {
   transition: color var(--apx-transition), padding-left var(--apx-transition);
 }
 .footer-col a:hover {
-  padding-left: 4px;
   text-decoration: none;
 }
 .footer-social a {
@@ -772,8 +771,14 @@ html[data-bs-theme="dark"] .apx-float-group.is-filled .form-label {
 #main-content .is-invalid ~ .invalid-feedback {
   visibility: visible;
 }
-body:has(.home-whatsapp-fab) .site-footer {
-  padding-bottom: 96px;
+body:has(.home-whatsapp-fab) .site-footer .footer-bottom {
+  padding-right: 148px;
+}
+@media (max-width: 767px) {
+  body:has(.home-whatsapp-fab) .site-footer .footer-bottom {
+    padding-right: 0;
+    padding-bottom: 64px;
+  }
 }
 .home-whatsapp-fab:focus-visible {
   outline: 3px solid #fff;
