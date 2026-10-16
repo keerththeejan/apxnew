@@ -1,7 +1,10 @@
 <?php
 $page = $page ?? [];
 $settings = $settings ?? [];
-$heroTitle = strtoupper((string) ($page['title'] ?? 'About'));
+$heroTitle = trim((string) ($page['title'] ?? ''));
+if ($heroTitle === '') {
+    $heroTitle = 'About';
+}
 $subtitle = (string) ($settings['about_subtitle'] ?? 'We help you travel with confidence.');
 $body = trim((string) ($page['content'] ?? ''));
 if ($body === '') {

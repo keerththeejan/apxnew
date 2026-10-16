@@ -1,6 +1,6 @@
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">DESTINATIONS</h1>
+    <h1 class="hero-title js-reveal">Destinations</h1>
     <p class="hero-sub js-reveal">Search and explore featured destinations.</p>
   </div>
 </section>
@@ -9,7 +9,7 @@
   <div class="container">
     <div class="row justify-content-center mb-4">
       <div class="col-12 col-lg-8">
-        <form method="get" action="<?= e(base_url('/destinations')) ?>" class="d-flex gap-2">
+        <form method="get" action="<?= e(base_url('/destinations')) ?>" class="page-search">
           <input class="form-control" name="q" placeholder="Search destination or country" value="<?= e((string) ($q ?? '')) ?>" />
           <button class="btn btn-primary" type="submit">Search</button>
         </form>
@@ -17,6 +17,9 @@
     </div>
 
     <div class="row g-3">
+      <?php if (($destinations ?? []) === []): ?>
+        <div class="col-12"><p class="page-empty">No destinations are listed yet.</p></div>
+      <?php endif; ?>
       <?php foreach (($destinations ?? []) as $d): ?>
         <div class="col-12 col-md-6 col-lg-4 js-reveal">
           <a class="service-card" href="<?= e(base_url('/destinations/' . $d['slug'])) ?>">

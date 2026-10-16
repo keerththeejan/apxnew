@@ -362,8 +362,9 @@ section.py-4 {
 /* Trust strip (presentational enhancement for footer contact pill) */
 .footer-contact-pill {
   border-radius: var(--apx-radius-lg);
-  background: linear-gradient(120deg, var(--orange), #ea580c);
+  background: #15345E;
   box-shadow: var(--apx-shadow);
+  border: 1px solid #263F64;
 }
 .footer-contact-item {
   gap: 8px;
@@ -519,21 +520,21 @@ img:not([loading="lazy"]) {
 .site-footer {
   position: relative;
   margin-top: clamp(3rem, 6vw, 4.5rem);
-  background: linear-gradient(180deg, var(--dark) 0%, #0a1228 100%);
+  background: #0B1F44;
+  color: #C6D4EA;
 }
 .footer-inner {
   padding: clamp(2rem, 4vw, 3rem) 18px;
 }
 .footer-col h4 {
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .footer-col a {
   transition: color var(--apx-transition), padding-left var(--apx-transition);
 }
 .footer-col a:hover {
-  padding-left: 4px;
   text-decoration: none;
 }
 .footer-social a {
@@ -705,4 +706,89 @@ html[data-bs-theme="dark"] .apx-float-group.is-filled .form-label {
     opacity: 1;
     transform: none;
   }
+}
+
+/* Customer pages: 12px actions, 16px cards, reserved field errors. */
+#main-content .btn {
+  border-radius: 12px;
+  min-height: 44px;
+}
+#main-content .btn-primary,
+#main-content .btn-cta {
+  background: #1769FF;
+  border: 1px solid #1769FF;
+  color: #fff;
+}
+#main-content .btn-primary:hover,
+#main-content .btn-cta:hover {
+  background: #3B82F6;
+  border-color: #3B82F6;
+  color: #fff;
+}
+#main-content .btn-outline-secondary {
+  border-color: #1769FF;
+  color: #0B1F44;
+  background: #fff;
+}
+#main-content .btn-outline-secondary:hover {
+  background: #EFF6FF;
+  color: #0B1F44;
+}
+#main-content .card,
+#main-content .glass-card,
+#main-content .glass-panel,
+#main-content .service-card,
+#main-content .border.rounded-3 {
+  border-radius: 16px !important;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+}
+#main-content .row > [class*="col-"] {
+  flex-direction: column;
+  align-items: stretch;
+}
+#main-content .row > [class*="col-"] > .card,
+#main-content .row > [class*="col-"] > .service-card {
+  width: 100%;
+  height: 100%;
+}
+#main-content .form-control,
+#main-content .form-select {
+  min-height: 46px;
+  border-radius: 12px;
+  border-color: #E2E8F0;
+}
+#main-content textarea.form-control {
+  min-height: 120px;
+}
+#main-content .invalid-feedback {
+  display: block;
+  min-height: 1.25rem;
+  margin-top: 0.25rem;
+  visibility: hidden;
+}
+#main-content .was-validated :invalid ~ .invalid-feedback,
+#main-content .is-invalid ~ .invalid-feedback {
+  visibility: visible;
+}
+body:has(.home-whatsapp-fab) .site-footer .footer-bottom {
+  padding-right: 148px;
+}
+@media (max-width: 767px) {
+  body:has(.home-whatsapp-fab) .site-footer .footer-bottom {
+    padding-right: 0;
+    padding-bottom: 64px;
+  }
+}
+.home-whatsapp-fab:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.topbar:has(.navbar-collapse.open) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.topbar .hamb {
+  position: relative;
+  z-index: 1200;
 }

@@ -1,6 +1,6 @@
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">GET A QUOTE</h1>
+    <h1 class="hero-title js-reveal">Get a quote</h1>
     <p class="hero-sub js-reveal">Estimate your shipment cost in seconds.</p>
   </div>
 </section>

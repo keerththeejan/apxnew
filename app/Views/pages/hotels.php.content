@@ -61,6 +61,9 @@
           <p class="text-secondary mb-0">Handpicked stays for your trip.</p>
         </div>
         <div class="row g-3">
+          <?php if (($hotels ?? []) === []): ?>
+            <div class="col-12"><p class="page-empty mb-0">No hotels are listed yet.</p></div>
+          <?php endif; ?>
           <?php foreach (($hotels ?? []) as $h): ?>
             <div class="col-12 col-md-6">
               <div class="card h-100" style="border-radius:16px">

@@ -28,23 +28,23 @@
             <form method="post" action="<?= e(base_url('/bookings/flight')) ?>">
               <?= csrf_field() ?>
               <div class="row g-3">
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-xl-6">
                   <label class="form-label">Full name *</label>
                   <input class="form-control" name="full_name" required />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-xl-6">
                   <label class="form-label">Phone *</label>
                   <input class="form-control" name="phone" required />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-xl-6">
                   <label class="form-label">Email</label>
                   <input class="form-control" name="email" type="email" />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-xl-6">
                   <label class="form-label">Destination / route</label>
                   <input class="form-control" name="destination" placeholder="e.g. CMB → DXB" />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-xl-6">
                   <label class="form-label">Travel date</label>
                   <input class="form-control" name="travel_date" type="date" />
                 </div>

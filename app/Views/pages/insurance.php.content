@@ -1,6 +1,6 @@
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">INSURANCE</h1>
+    <h1 class="hero-title js-reveal">Insurance</h1>
     <p class="hero-sub js-reveal">Travel insurance for a safer journey.</p>
   </div>
 </section>
@@ -15,6 +15,9 @@
             <p class="text-secondary">Choose a plan and submit your request. Payment integration can be added later (Stripe/PayPal ready).</p>
 
             <div class="row g-3">
+              <?php if (($packages ?? []) === []): ?>
+                <div class="col-12"><p class="page-empty mb-0">No insurance packages are listed yet.</p></div>
+              <?php endif; ?>
               <?php foreach (($packages ?? []) as $p): ?>
                 <div class="col-12 col-md-6">
                   <div class="border rounded-3 p-3 h-100">

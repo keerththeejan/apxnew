@@ -95,9 +95,41 @@
       prevFocus = document.activeElement;
       links.classList.add('open');
       hamb.setAttribute('aria-expanded','true');
-      if (window.innerWidth <= 991) document.body.style.overflow = 'hidden';
+      if (window.innerWidth <= 991 || topbar.classList.contains('is-nav-compact')) document.body.style.overflow = 'hidden';
       var first = links.querySelector('a');
       if (first) first.focus();
+    }
+
+    function drawerMode(){
+      return window.innerWidth <= 991 || topbar.classList.contains('is-nav-compact');
+    }
+
+    function syncNavFit(){
+      if (window.innerWidth <= 991) {
+        topbar.classList.remove('is-nav-compact');
+        return;
+      }
+      var shell = topbar.querySelector('.navbar-shell');
+      var brand = shell ? shell.querySelector('.brand') : null;
+      var linkRow = links.querySelector('.primary-links');
+      var cta = links.querySelector('.nav-cta');
+      if (!shell || !brand || !linkRow) return;
+      var wasCompact = topbar.classList.contains('is-nav-compact');
+      topbar.classList.remove('is-nav-compact');
+      var firstLink = linkRow.firstElementChild;
+      var lastLink = linkRow.lastElementChild;
+      var linkSpan = 0;
+      if (firstLink && lastLink) {
+        var a = firstLink.getBoundingClientRect();
+        var b = lastLink.getBoundingClientRect();
+        linkSpan = Math.max(linkRow.scrollWidth, b.right - a.left);
+      }
+      var need = brand.offsetWidth + linkSpan + (cta ? cta.offsetWidth : 0) + 48;
+      if (need > shell.clientWidth) {
+        topbar.classList.add('is-nav-compact');
+      } else if (wasCompact) {
+        closeMenu();
+      }
     }
 
     hamb.addEventListener('click', function(){
@@ -106,12 +138,15 @@
       else openMenu();
     });
 
+    syncNavFit();
     window.addEventListener('resize', function(){
-      if (window.innerWidth > 991) closeMenu();
+      syncNavFit();
+      if (!drawerMode()) closeMenu();
     });
+    window.addEventListener('load', syncNavFit);
 
     document.addEventListener('click', function(e){
-      if (window.innerWidth <= 991 && links.classList.contains('open') && !links.contains(e.target) && !hamb.contains(e.target)) {
+      if (drawerMode() && links.classList.contains('open') && !links.contains(e.target) && !hamb.contains(e.target)) {
         closeMenu();
       }
     });
@@ -125,7 +160,7 @@
 
     links.addEventListener('click', function(e){
       var a = e.target.closest('a[data-nav]');
-      if (!a || window.innerWidth > 991) return;
+      if (!a || (window.innerWidth > 991 && !topbar.classList.contains('is-nav-compact'))) return;
       if (a.classList.contains('dropdown-toggle')) return;
       if (a.getAttribute('href') === '#' || a.getAttribute('href') === '') return;
       closeMenu();

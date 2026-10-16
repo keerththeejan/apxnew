@@ -6,7 +6,7 @@ $bookingRef = (string) ($bookingRef ?? '');
 ?>
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">LIVE TRACKING</h1>
+    <h1 class="hero-title js-reveal">Live tracking</h1>
     <p class="hero-sub js-reveal">Booking reference: <?= e($bookingRef) ?></p>
   </div>
 </section>

@@ -8,7 +8,7 @@ unset($_SESSION['flash_old']);
 ?>
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">VEHICLE BOOKING</h1>
+    <h1 class="hero-title js-reveal">Vehicle booking</h1>
     <p class="hero-sub js-reveal">Book rides and rentals with real-time price preview.</p>
   </div>
 </section>
@@ -55,9 +55,9 @@ unset($_SESSION['flash_old']);
           </div>
           <div class="vehicle-booking-field vehicle-booking-field--full">
             <div class="vb-datetime-quick" role="group" aria-label="Quick date and time">
-              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_now">Now</button>
-              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_plus1">+1 Hour</button>
-              <button type="button" class="btn btn-outline-light btn-sm" id="vb_dt_tomorrow">Tomorrow</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="vb_dt_now">Now</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="vb_dt_plus1">+1 Hour</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="vb_dt_tomorrow">Tomorrow</button>
             </div>
             <div class="vb-datetime-error" id="vb_datetime_error" aria-live="polite"></div>
           </div>
@@ -120,7 +120,7 @@ unset($_SESSION['flash_old']);
         <input type="hidden" name="pricing_breakdown_json" id="vb_pricing_json" value="{}" />
 
         <div class="vehicle-booking-actions">
-          <button type="button" class="btn btn-outline-light" id="vb_preview_btn">Preview Price</button>
+          <button type="button" class="btn btn-outline-secondary" id="vb_preview_btn">Preview Price</button>
           <button type="submit" class="btn btn-cta" id="vb_submit_btn">Book Now</button>
         </div>
       </form>
