@@ -25,7 +25,9 @@
             <h2 class="fw-bold">Visa Services</h2>
             <p class="text-secondary">We help you prepare documents, choose the right visa, and submit correctly.</p>
 
-            <?php if (!empty($visas)): ?>
+            <?php if (empty($visas)): ?>
+              <p class="page-empty">No visa services are listed yet.</p>
+            <?php else: ?>
               <div class="mt-3">
                 <?php foreach ($visas as $v): ?>
                   <div class="border rounded-3 p-3 mb-2">

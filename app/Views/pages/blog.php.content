@@ -1,6 +1,6 @@
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">BLOG</h1>
+    <h1 class="hero-title js-reveal">Blog</h1>
     <p class="hero-sub js-reveal">Latest updates, offers, and travel tips.</p>
   </div>
 </section>
@@ -8,6 +8,9 @@
 <section class="py-5">
   <div class="container">
     <div class="row g-3">
+      <?php if (($posts ?? []) === []): ?>
+        <div class="col-12"><p class="page-empty">No posts are published yet.</p></div>
+      <?php endif; ?>
       <?php foreach (($posts ?? []) as $post): ?>
         <div class="col-12 col-md-6 col-lg-4 js-reveal">
           <div class="card h-100" style="border-radius:16px">

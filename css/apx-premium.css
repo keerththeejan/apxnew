@@ -706,3 +706,74 @@ html[data-bs-theme="dark"] .apx-float-group.is-filled .form-label {
     transform: none;
   }
 }
+
+/* Customer pages: 12px actions, 16px cards, reserved field errors. */
+#main-content .btn {
+  border-radius: 12px;
+  min-height: 44px;
+}
+#main-content .btn-primary,
+#main-content .btn-cta {
+  background: #1769FF;
+  border: 1px solid #1769FF;
+  color: #fff;
+}
+#main-content .btn-primary:hover,
+#main-content .btn-cta:hover {
+  background: #3B82F6;
+  border-color: #3B82F6;
+  color: #fff;
+}
+#main-content .btn-outline-secondary {
+  border-color: #1769FF;
+  color: #0B1F44;
+  background: #fff;
+}
+#main-content .btn-outline-secondary:hover {
+  background: #EFF6FF;
+  color: #0B1F44;
+}
+#main-content .card,
+#main-content .glass-card,
+#main-content .glass-panel,
+#main-content .service-card,
+#main-content .border.rounded-3 {
+  border-radius: 16px !important;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+}
+#main-content .row > [class*="col-"] {
+  flex-direction: column;
+  align-items: stretch;
+}
+#main-content .row > [class*="col-"] > .card,
+#main-content .row > [class*="col-"] > .service-card {
+  width: 100%;
+  height: 100%;
+}
+#main-content .form-control,
+#main-content .form-select {
+  min-height: 46px;
+  border-radius: 12px;
+  border-color: #E2E8F0;
+}
+#main-content textarea.form-control {
+  min-height: 120px;
+}
+#main-content .invalid-feedback {
+  display: block;
+  min-height: 1.25rem;
+  margin-top: 0.25rem;
+  visibility: hidden;
+}
+#main-content .was-validated :invalid ~ .invalid-feedback,
+#main-content .is-invalid ~ .invalid-feedback {
+  visibility: visible;
+}
+body:has(.home-whatsapp-fab) .site-footer {
+  padding-bottom: 96px;
+}
+.home-whatsapp-fab:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}

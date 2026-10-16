@@ -256,7 +256,7 @@ if (!function_exists('apx_home_banner_slide_markup')) {
                   <img class="service-card-flag-img" src="<?= e($svcFlagSrcSm) ?>" srcset="<?= e($svcFlagSrcSm) ?> 1x, <?= e($svcFlagSrc2xSm) ?> 2x" sizes="78px" alt="" width="78" height="52" loading="lazy" decoding="async" />
                 </div>
               <?php endif; ?>
-              <div class="service-title"><?= e(strtoupper((string) ($svc['title'] ?? ''))) ?></div>
+              <div class="service-title"><?= e((string) ($svc['title'] ?? '')) ?></div>
             </div>
             <div class="service-desc"><?= e((string) ($svc['description'] ?? '')) ?></div>
             <div class="service-cta">Learn more →</div>

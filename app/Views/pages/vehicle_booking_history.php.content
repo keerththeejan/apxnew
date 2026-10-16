@@ -7,7 +7,7 @@ $bookings = $bookings ?? [];
 ?>
 <section class="hero hero-generic">
   <div class="container hero-inner">
-    <h1 class="hero-title js-reveal">BOOKING HISTORY</h1>
+    <h1 class="hero-title js-reveal">Booking history</h1>
     <p class="hero-sub js-reveal">Check your vehicle bookings by phone number.</p>
   </div>
 </section>
