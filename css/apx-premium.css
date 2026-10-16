@@ -362,8 +362,9 @@ section.py-4 {
 /* Trust strip (presentational enhancement for footer contact pill) */
 .footer-contact-pill {
   border-radius: var(--apx-radius-lg);
-  background: linear-gradient(120deg, var(--orange), #ea580c);
+  background: #15345E;
   box-shadow: var(--apx-shadow);
+  border: 1px solid #263F64;
 }
 .footer-contact-item {
   gap: 8px;
@@ -519,7 +520,8 @@ img:not([loading="lazy"]) {
 .site-footer {
   position: relative;
   margin-top: clamp(3rem, 6vw, 4.5rem);
-  background: linear-gradient(180deg, var(--dark) 0%, #0a1228 100%);
+  background: #0B1F44;
+  color: #C6D4EA;
 }
 .footer-inner {
   padding: clamp(2rem, 4vw, 3rem) 18px;
@@ -776,4 +778,12 @@ body:has(.home-whatsapp-fab) .site-footer {
 .home-whatsapp-fab:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;
+}
+.topbar:has(.navbar-collapse.open) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.topbar .hamb {
+  position: relative;
+  z-index: 1200;
 }
